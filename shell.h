@@ -17,7 +17,26 @@ class Shell {
          * @brief Print header and initialize operating system.
          */
         void initialize();
+
+        /**
+         * @brief Create a new process or list running processes.
+         */
         void screen();
+
+        /**
+         * @brief Continuously create new process instances until the user calls the stop command.
+         */
+        void schedulerTest();
+
+        /**
+         * @brief Stop the creation of new process instances.
+         */
+        void schedulerStop();
+
+        /**
+         * @brief Display a report of CPU usage and progress.
+         */
+        void reportUtil();
 
         /**
          * @brief Display prompt, ask user for input, and call other methods to handle command.
@@ -28,6 +47,11 @@ class Shell {
          * @brief Print 'CSOPESY' header.
          */
         static void printHeader();
+
+        /**
+         * @brief Clear the console screen and reprint the header.
+         */
+        void clear();
 
         /**
          * @brief Get the flag that indicates whether the system should shut down.

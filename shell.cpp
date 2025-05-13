@@ -14,14 +14,34 @@ Shell::Shell()
 
 void Shell::initialize()
 {
-
     printHeader();
     prompt();
 }
 
 void Shell::screen()
 {
+    std::cout << "[i] screen command recognized. Doing something." << std::endl;
+}
 
+void Shell::schedulerTest()
+{
+    std::cout << "[i] scheduler-test command recognized. Doing something." << std::endl;
+}
+
+void Shell::schedulerStop()
+{
+    std::cout << "[i] scheduler-stop command recognized. Doing something." << std::endl;
+}
+
+void Shell::reportUtil()
+{
+    std::cout << "[i] report-util command recognized. Doing something." << std::endl;
+}
+
+void Shell::clear()
+{
+    std::cout << "\033[2J\033[1;1H" << std::endl;
+    printHeader();
 }
 
 void Shell::printHeader()
@@ -44,7 +64,15 @@ void Shell::prompt()
         initialize();
     } else if (input == "screen") {
         screen();
-    } else if (input == "quit") {
+    } else if (input == "scheduler-test") {
+        schedulerTest();
+    } else if (input == "scheduler-stop") {
+        schedulerStop();
+    } else if (input == "report-util") {
+        reportUtil();
+    } else if (input == "clear") {
+        clear();
+    } else if (input == "exit") {
         setQuit();
     } else if (!input.empty()) { // error on unknown, non-empty command.
         std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
