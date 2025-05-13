@@ -2,7 +2,13 @@
 
 int main()
 {
-    shell shell;
-    shell.printHeader();
+    Shell shell;
+    shell.initialize();
+
+    while (!shell.getQuit())
+    {
+        shell.prompt();
+    }
+
     return 0;
 }

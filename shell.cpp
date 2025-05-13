@@ -5,23 +5,71 @@
 #include "shell.h"
 
 #include <iostream>
+#include <string>
 
-shell::shell()
+Shell::Shell()
 {
 
 }
 
-
-void shell::prompt()
+void Shell::initialize()
 {
-    std::cout << "Welcome to the command line: \n";
+
+    printHeader();
+    prompt();
 }
 
+void Shell::screen()
+{
 
-void shell::printHeader()
+}
+
+void Shell::printHeader()
 {
     std::cout << " _______ ___  ___  ___ ___ __ __\n"
                  "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
                  "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
-                 "           /_/           /___/  \n";
+                 "           /_/           /___/  \n"
+                 "Welcome to the CSOPESY command line.\n";
+}
+
+void Shell::prompt()
+{
+    std::string input;
+
+    std::cout << "user ~ > " << std::flush;
+    std::getline(std::cin, input);
+
+    if (input == "initialize")
+    {
+        initialize();
+    }
+    else if (input == "screen")
+    {
+        screen();
+    }
+    else if (!input.empty()) // error on unknown, non-empty command.
+    {
+        std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
+    }
+}
+
+bool Shell::getQuit()
+{
+    return quit;
+}
+
+void Shell::setQuit()
+{
+    quit = true;
+}
+
+bool Shell::getInit()
+{
+    return init;
+}
+
+void Shell::setInit()
+{
+    init = true;
 }
