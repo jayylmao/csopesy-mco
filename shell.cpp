@@ -1,12 +1,24 @@
 //
-// Created by jaymi on 11/05/2025.
+// Created by jaymi on 13/05/2025.
 //
 
-#include "functions.h"
+#include "shell.h"
 
 #include <iostream>
 
-void printHeader()
+shell::shell()
+{
+
+}
+
+
+void shell::prompt()
+{
+    std::cout << "Welcome to the command line: \n";
+}
+
+
+void shell::printHeader()
 {
     std::cout << " _______ ___  ___  ___ ___ __ __\n"
                  "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
