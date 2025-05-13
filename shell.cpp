@@ -40,21 +40,18 @@ void Shell::prompt()
     std::cout << "user ~ > " << std::flush;
     std::getline(std::cin, input);
 
-    if (input == "initialize")
-    {
+    if (input == "initialize") {
         initialize();
-    }
-    else if (input == "screen")
-    {
+    } else if (input == "screen") {
         screen();
-    }
-    else if (!input.empty()) // error on unknown, non-empty command.
-    {
+    } else if (input == "quit") {
+        setQuit();
+    } else if (!input.empty()) { // error on unknown, non-empty command.
         std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
     }
 }
 
-bool Shell::getQuit()
+bool Shell::getQuit() const
 {
     return quit;
 }
@@ -62,9 +59,12 @@ bool Shell::getQuit()
 void Shell::setQuit()
 {
     quit = true;
+
+    std::cout << "[i] Shutting down command line. Goodbye." << std::endl;
+    std::exit(EXIT_SUCCESS);
 }
 
-bool Shell::getInit()
+bool Shell::getInit() const
 {
     return init;
 }

@@ -33,10 +33,10 @@ class Shell {
          * @brief Get the flag that indicates whether the system should shut down.
          * @return Boolean representing whether system should shut down.
          */
-        bool getQuit();
+        [[nodiscard]] bool getQuit() const;
 
         /**
-         * @brief Set the flag for the system to shut down.
+         * @brief Set the quit flag and shut down the system.
          */
         void setQuit();
 
@@ -44,7 +44,7 @@ class Shell {
          * @brief Get the flag that indicates whether the system is initialized.
          * @return Boolean representing whether system is initialized.
          */
-        bool getInit();
+        [[nodiscard]] bool getInit() const;
 
         /**
          * @brief Set the flag that indicates system initialization.

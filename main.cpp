@@ -5,8 +5,7 @@ int main()
     Shell shell;
     shell.initialize();
 
-    while (!shell.getQuit())
-    {
+    while (!shell.getQuit()) {
         shell.prompt();
     }
 
