@@ -1,7 +1,7 @@
 //
 // Created by jaymi on 13/05/2025.
 //
-
+#include <cstdlib>
 #ifndef SHELL_H
 #define SHELL_H
 
@@ -57,7 +57,7 @@ class Shell {
          * @brief Get the flag that indicates whether the system should shut down.
          * @return Boolean representing whether system should shut down.
          */
-        [[nodiscard]] bool getQuit() const;
+        bool getQuit() const;
 
         /**
          * @brief Set the quit flag and shut down the system.
@@ -68,7 +68,7 @@ class Shell {
          * @brief Get the flag that indicates whether the system is initialized.
          * @return Boolean representing whether system is initialized.
          */
-        [[nodiscard]] bool getInit() const;
+        bool getInit() const;
 
         /**
          * @brief Set the flag that indicates system initialization.
@@ -76,8 +76,8 @@ class Shell {
         void setInit();
 
     private:
-        bool init = false; // System starts uninitialized at first.
-        bool quit = false; // Check if user requests operating system to shut down.
+        bool init; // System starts uninitialized at first.
+        bool quit; // Check if user requests operating system to shut down.
 };
 
 

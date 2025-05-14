@@ -40,7 +40,13 @@ void Shell::reportUtil()
 
 void Shell::clear()
 {
-    std::cout << "\033[2J\033[1;1H" << std::endl;
+    // std::cout << "\033[2J\033[1;1H" << std::endl;
+    #ifdef _WIN32
+        std::system("cls");
+    #else
+        std::system("clear");
+    #endif
+    
     printHeader();
 }
 
