@@ -8,3 +8,6 @@
 /dataSources.local.xml
 #Build folder
 /build
+
+# All executable files
+*.exe
