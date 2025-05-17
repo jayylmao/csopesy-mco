@@ -12,10 +12,46 @@ Shell::Shell()
 
 }
 
+bool Shell::getQuit() const
+{
+    return quit;
+}
+
+void Shell::setQuit()
+{
+    quit = true;
+    std::exit(EXIT_SUCCESS);
+}
+
+bool Shell::getInit() const
+{
+    return init;
+}
+
+void Shell::setInit()
+{
+    init = true;
+}
+
+int Shell::getFocusedPID() const
+{
+    return focusedPID;
+}
+
+void Shell::setFocusedPID(const int pid)
+{
+    focusedPID = pid;
+}
+
 void Shell::initialize()
 {
-    printHeader();
-    prompt();
+    if (!init) {
+        init = true;
+        printHeader();
+        prompt();
+    } else {
+        std::cout << "[i] initialize command recognized. Doing something." << std::endl;
+    }
 }
 
 void Shell::screen()
@@ -40,7 +76,6 @@ void Shell::reportUtil()
 
 void Shell::clear()
 {
-    // std::cout << "\033[2J\033[1;1H" << std::endl;
     #ifdef _WIN32
         std::system("cls");
     #else
@@ -48,6 +83,15 @@ void Shell::clear()
     #endif
     
     printHeader();
+}
+
+void Shell::exit()
+{
+    if (getFocusedPID() == 0) {
+        setQuit();
+    } else { // TODO: exit process. for now, this just sets the focused pid and nothing else.
+        setFocusedPID(0);
+    }
 }
 
 void Shell::printHeader()
@@ -83,27 +127,4 @@ void Shell::prompt()
     } else if (!input.empty()) { // error on unknown, non-empty command.
         std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
     }
-}
-
-bool Shell::getQuit() const
-{
-    return quit;
-}
-
-void Shell::setQuit()
-{
-    quit = true;
-
-    std::cout << "[i] Shutting down command line. Goodbye." << std::endl;
-    std::exit(EXIT_SUCCESS);
-}
-
-bool Shell::getInit() const
-{
-    return init;
-}
-
-void Shell::setInit()
-{
-    init = true;
 }
