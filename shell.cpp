@@ -76,6 +76,7 @@ void Shell::reportUtil()
 
 void Shell::clear()
 {
+    std::cout << "[i] clear command recognized. Doing something." << std::endl;
     #ifdef _WIN32
         std::system("cls");
     #else
