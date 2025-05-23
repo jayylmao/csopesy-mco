@@ -5,7 +5,6 @@
 
 #include <string>
 #include <vector>
-#include <bits/stdc++.h>
 
 #ifndef SHELL_H
 #define SHELL_H

@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <bits/stdc++.h>
 
 Shell::Shell()
 {

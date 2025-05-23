@@ -8,6 +8,9 @@
 /dataSources.local.xml
 #Build folder
 /build
+/out
+/.vs
+/.vscode
 
 # All executable files
 *.exe
