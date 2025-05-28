@@ -24,8 +24,14 @@ public:
 
     /**
      * @brief Create a new process or list running processes.
+     * @param args Perform different actions based on the passed argument. -s creates a new process, -r redraws the console screen before creating a new process, and -ls lists all running processes
      */
-    void screen();
+    void screen(std::vector<std::string> args);
+
+    /**
+     * @brief List all running processes.
+     */
+    void screenList();
 
     /**
      * @brief Continuously create new process instances until the user calls the stop command.

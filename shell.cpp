@@ -52,14 +52,32 @@ void Shell::initialize()
         init = true;
         printHeader();
         prompt();
-    } else {
+    }
+    else {
         std::cout << "[i] initialize command recognized. Doing something." << std::endl;
     }
 }
 
-void Shell::screen()
+void Shell::screen(std::vector<std::string> args)
 {
-    std::cout << "[i] screen command recognized. Doing something." << std::endl;
+    // no argument given to screen.
+    if (args.size() < 1) {
+        std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
+        return;
+    } // switch to list screen command.
+    else if (args[0] == "-ls") {
+        screenList();
+        return;
+    } // too many arguments given to screen.
+    else if (args.size() > 2) {
+        std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
+        return;
+    }
+}
+
+void Shell::screenList()
+{
+    std::cout << "[i] list all running processes." << std::endl;
 }
 
 void Shell::schedulerTest()
@@ -93,7 +111,8 @@ void Shell::exit()
 {
     if (getFocusedPID() == 0) {
         setQuit();
-    } else { // TODO: exit process. for now, this just sets the focused pid and nothing else.
+    }
+    else { // TODO: exit process. for now, this just sets the focused pid and nothing else.
         setFocusedPID(0);
     }
 }
@@ -144,19 +163,27 @@ void Shell::prompt()
 
     if (input_tokens[0] == "initialize") {
         initialize();
-    } else if (input_tokens[0] == "screen") {
-        screen();
-    } else if (input_tokens[0] == "scheduler-test") {
+    } 
+    else if (input_tokens[0] == "screen") {
+        std::vector<std::string> sliced_input_tokens(input_tokens.begin() + 1, input_tokens.end());
+        screen(sliced_input_tokens);
+    }
+    else if (input_tokens[0] == "scheduler-test") {
         schedulerTest();
-    } else if (input_tokens[0] == "scheduler-stop") {
+    }
+    else if (input_tokens[0] == "scheduler-stop") {
         schedulerStop();
-    } else if (input_tokens[0] == "report-util") {
+    }
+    else if (input_tokens[0] == "report-util") {
         reportUtil();
-    } else if (input_tokens[0] == "clear") {
+    }
+    else if (input_tokens[0] == "clear") {
         clear();
-    } else if (input_tokens[0] == "exit") {
+    }
+    else if (input_tokens[0] == "exit") {
         setQuit();
-    } else if (!input_tokens[0].empty()) { // error on unknown, non-empty command.
+    }
+    else if (!input_tokens[0].empty()) { // error on unknown, non-empty command.
         std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
     }
 }
