@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(main main.cpp
         shell.cpp
-        shell.h)
+        shell.h "AConsole.h" "AConsole.cpp"   "ScreenCommands.h" "ScreenCommands.cpp")

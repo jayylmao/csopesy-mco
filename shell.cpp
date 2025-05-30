@@ -7,6 +7,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "ScreenCommands.h"
+
 
 Shell::Shell()
 {
@@ -65,10 +67,44 @@ void Shell::screen(std::vector<std::string> args)
         std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     } // switch to list screen command.
-    else if (args[0] == "-ls") {
+    else if (args[0] == "-ls") { //SCREEN -LS
         screenList();
         return;
     } // too many arguments given to screen.
+  
+
+    else if (args[0] == "-s") { //SCREEN - S
+        if (args.size() < 2) {
+            std::cout << "[*] You must provide a process name. Usage: screen -s <processname>" << std::endl;
+            return;
+        }
+        std::system("cls");
+        static int nextPID = 1; //first proceess ID
+        std::string processName = args[1];
+        int pid = nextPID++;
+
+        //simulated total lines
+        int totalLines = 50;
+
+        auto newConsole = std::make_unique<ScreenS>(processName, totalLines, pid);
+        newConsole->onEnabled(); // runs child console (displays and waits for "exit")
+
+        // Save the process
+        consoles.push_back(std::move(newConsole));
+
+        //clear();
+        std::system("cls");
+        printHeader();
+
+    }
+
+
+    else if (args[0] == "-r") { //SCREEN -R
+        if (args.size() < 2) {
+            std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
+            return;
+        }
+    }
     else if (args.size() > 2) {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
@@ -78,6 +114,7 @@ void Shell::screen(std::vector<std::string> args)
 void Shell::screenList()
 {
     std::cout << "[i] list all running processes." << std::endl;
+    
 }
 
 void Shell::schedulerTest()

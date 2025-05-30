@@ -1,8 +1,9 @@
 //
 // Created by jaymi on 13/05/2025.
 //
+#include "AConsole.h"
 #include <cstdlib>
-
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -114,6 +115,11 @@ private:
     bool init; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
 	int focusedPID; // ID of focused process. The OS main menu is 0.
+
+    //not using ConsoleManageryet
+    std::vector<std::unique_ptr<AConsole>> consoles;
+    int nextPID = 1;
+
 };
 
 
