@@ -178,12 +178,16 @@ void Shell::exit()
 
 void Shell::printHeader()
 {
-    std::cout << " _______ ___  ___  ___ ___ __ __\n"
-                 "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
-                 "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
-                 "           /_/           /___/  \n"
-                 "Welcome to the CSOPESY command line.\n";
+    std::cout << "\033[1;36m" // Bright cyan
+        << " _______ ___  ___  ___ ___ __ __\n"
+        "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
+        "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
+        "           /_/           /___/  \n"
+        << "\033[1;32m" // Bright green
+        << "Welcome to the CSOPESY command line. Type 'help' for a list of commands.\n"
+        << "\033[0m"; // Reset color
 }
+
 
 void Shell::splitString(std::string const &string, char const delim, std::vector<std::string> &tokens)
 {
