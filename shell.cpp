@@ -73,6 +73,18 @@ void Shell::screen(std::vector<std::string> args)
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     }
+    else if (args[0] == "-s") {
+        std::cout << "[*] Creating process..." << std::endl;
+        return;
+    }
+    else if (args[0] == "-r") {
+        std::cout << "[*] Redrawing and creating a new process..." << std::endl;
+        return;
+    }
+    else {
+        std::cout << "[*] " << args[0] << " is an invalid argument." << std::endl;
+        return;
+    }
 }
 
 void Shell::screenList()
