@@ -99,12 +99,34 @@ void Shell::screen(std::vector<std::string> args)
     }
 
 
-    else if (args[0] == "-r") { //SCREEN -R
+    else if (args[0] == "-r") { // SCREEN -R
         if (args.size() < 2) {
             std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
             return;
         }
+
+        std::string processName = args[1];
+        bool found = false;
+
+        for (const auto& console : consoles) {
+            if (console->getName() == processName) {
+                std::system("cls");
+                console->onEnabled(); // Enter interactive loop
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            std::cout << "[*] No process with name '" << processName << "' found.\n";
+        }
+
+        // After exiting child process, return to main screen
+        std::system("cls");
+        printHeader(); // Re-show your main screen
     }
+
+
     else if (args.size() > 2) {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;

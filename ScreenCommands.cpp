@@ -32,6 +32,7 @@ void ScreenS::process() {
 
     while (true) {
         display();
+        std::cout << "\n type exit to Exit. \n";
         std::cout << "\nroot:\> ";
         std::getline(std::cin, input);
 
