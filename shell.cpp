@@ -195,6 +195,19 @@ void Shell::prompt()
     else if (input_tokens[0] == "exit") {
         setQuit();
     }
+    else if (input_tokens[0] == "help") { //update for more commands soon.
+        std::cout << "[*] Available commands:\n\n"
+            << "  initialize\n"
+            << "  screen\n"
+            << "    - screen -s\n"
+            << "    - screen -r\n"
+            << "    - screen -ls\n"
+            << "  scheduler-test\n"
+            << "  scheduler-stop\n"
+            << "  report-util\n"
+            << "  clear\n"
+            << "  exit\n" << std::endl;
+    }
     else if (!input_tokens[0].empty()) { // error on unknown, non-empty command.
         std::cout << "[*] Unknown command. Type 'help' to get a list of commands." << std::endl;
     }
