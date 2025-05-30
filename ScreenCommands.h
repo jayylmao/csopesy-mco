@@ -11,6 +11,13 @@ public:
     void display() override;
     void process() override;
 
+    int getProcessID() const { return processID; }
+    int getCurrentLine() const { return currentLine; }
+    int getTotalLineCount() const { return totalLineCount; }
+    std::string getCreationTimestamp() const { return creationTimestamp; }
+
+    void printStatusLine(bool isFinished) const;
+
 private:
     int currentLine;
     int totalLineCount;
