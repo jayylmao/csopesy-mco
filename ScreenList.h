@@ -14,6 +14,7 @@ private:
     const std::vector<std::unique_ptr<AConsole>>& consoles;
     int totalCores;
 
-    void printStatusLine(const ScreenS* process, bool isFinished) const;
+    void printStatusLine(const ScreenS* process, bool isFinished, int coreNumber = -1) const;
+
     ;
 };

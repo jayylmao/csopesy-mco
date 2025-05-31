@@ -37,7 +37,7 @@ void ScreenList::display() const {
     std::cout << "\nRunning Processes (" << runningCount << "):\n";
     for (size_t i = 0; i < runningProcesses.size(); ++i) {
         int coreNumber = (i < totalCores) ? i : -1;
-        printStatusLine(runningProcesses[i], false);
+        printStatusLine(runningProcesses[i], false, coreNumber);
     }
 
     std::cout << "\nFinished Processes (" << finishedCount << "):\n";
@@ -47,13 +47,19 @@ void ScreenList::display() const {
 }
 
 
-void ScreenList::printStatusLine(const ScreenS* process, bool isFinished) const {
+void ScreenList::printStatusLine(const ScreenS* process, bool isFinished, int coreNumber) const {
     std::cout << process->getName() << "\t(" << process->getCreationTimestamp() << ")\t";
         
     if (isFinished) {
         std::cout << "Finished\t" << process->getTotalLineCount() << " / " << process->getTotalLineCount() << "\n";
     }
     else {
-        std::cout << "Core: # \t\t" << process->getCurrentLine() << " / " << process->getTotalLineCount() << "\n";
+        if (coreNumber >= 0 && coreNumber < totalCores) {
+            std::cout << "Core: " << coreNumber + 1 << "\t\t";
+        }
+        else {
+            std::cout << "Pending\t\t";
+        }
+        std::cout << process->getCurrentLine() << " / " << process->getTotalLineCount() << "\n";
     }
 }
