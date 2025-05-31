@@ -121,10 +121,11 @@ void Shell::screen(std::vector<std::string> args)
         if (!found) {
             std::cout << "[*] No process with name '" << processName << "' found.\n";
         }
-
-        // After exiting child process, return to main screen
-        std::system("cls");
-        printHeader(); // Re-show your main screen
+        else {
+            // After exiting child process, return to main screen
+            std::system("cls");
+            printHeader(); // Re-show your main screen
+        }
     }
 
 
