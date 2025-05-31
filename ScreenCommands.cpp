@@ -56,14 +56,3 @@ std::string ScreenS::getCurrentTimestamp() {
     return oss.str();
 }
 
-void ScreenS::printStatusLine(bool isFinished) const {
-    if (isFinished) {
-        std::cout << name << "\t(" << creationTimestamp << ")\t"
-            << "Finished\t" << totalLineCount << " / " << totalLineCount << "\n";
-    }
-    else {
-        std::cout << name << "\t(" << creationTimestamp << ")\t"
-            << "Core: " << " # " << "\t\t"
-            << currentLine << " / " << totalLineCount << "\n";
-    }
-}
