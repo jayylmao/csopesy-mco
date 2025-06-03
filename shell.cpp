@@ -64,7 +64,7 @@ void Shell::screen(std::vector<std::string> args)
 {
     // no argument given to screen.
     if (args.size() < 1) {
-        std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
+        std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to view a process, and -ls to list the running processes." << std::endl;
         return;
     } // switch to list screen command.
     else if (args[0] == "-ls") { //SCREEN -LS
