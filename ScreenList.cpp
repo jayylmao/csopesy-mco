@@ -1,7 +1,4 @@
 #include "ScreenList.h"
-#include "ScreenCommands.h"
-#include <iostream>
-#include <algorithm>
 
 ScreenList::ScreenList(const std::vector<std::unique_ptr<AConsole>>& consoles, int totalCores)
     : consoles(consoles), totalCores(totalCores) {

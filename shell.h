@@ -1,14 +1,14 @@
-//
-// Created by jaymi on 13/05/2025.
-//
+#pragma once
 #include "AConsole.h"
+
+#include "ScreenCommands.h"
+#include "ScreenList.h"
+#include "Marquee.h"
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
-
-#ifndef SHELL_H
-#define SHELL_H
+#include <iostream>
 
 /**
  * @class Shell
@@ -48,6 +48,11 @@ public:
      * @brief Display a report of CPU usage and progress.
      */
     void reportUtil();
+
+    /**
+     * @brief Display marquee text that moves around the screen to demonstrate a polling-driven CLI display.
+     */
+    void marquee();
 
     /**
      * @brief Splits a given input string given a delimiter and returns a vector of tokens.
@@ -121,7 +126,3 @@ private:
     int nextPID = 1;
 
 };
-
-
-
-#endif //SHELL_H

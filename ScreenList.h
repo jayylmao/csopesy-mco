@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
+#include <algorithm>
 #include "ScreenCommands.h"
 #include "AConsole.h"
 

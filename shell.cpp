@@ -4,13 +4,6 @@
 
 #include "shell.h"
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include "ScreenCommands.h"
-#include "ScreenList.h"
-
-
 Shell::Shell()
 {
     init = false;
@@ -142,6 +135,12 @@ void Shell::screenList()
     listView.display();
 }
 
+void Shell::marquee()
+{
+    Marquee marquee(60, "Hello world in marquee!");
+    marquee.start();
+}
+
 void Shell::schedulerTest()
 {
     std::cout << "[i] scheduler-test command recognized. Doing something." << std::endl;
@@ -159,7 +158,6 @@ void Shell::reportUtil()
 
 void Shell::clear()
 {
-    std::cout << "[i] clear command recognized. Doing something." << std::endl;
     #ifdef _WIN32
         std::system("cls");
     #else
@@ -242,6 +240,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "report-util") {
         reportUtil();
+    }
+    else if (input_tokens[0] == "marquee") {
+        marquee();
     }
     else if (input_tokens[0] == "clear") {
         clear();
