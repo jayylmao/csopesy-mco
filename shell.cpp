@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "ScreenCommands.h"
+#include "ScreenList.h"
 
 
 Shell::Shell()
@@ -120,10 +121,11 @@ void Shell::screen(std::vector<std::string> args)
         if (!found) {
             std::cout << "[*] No process with name '" << processName << "' found.\n";
         }
-
-        // After exiting child process, return to main screen
-        std::system("cls");
-        printHeader(); // Re-show your main screen
+        else {
+            // After exiting child process, return to main screen
+            std::system("cls");
+            printHeader(); // Re-show your main screen
+        }
     }
 
 
@@ -136,46 +138,8 @@ void Shell::screen(std::vector<std::string> args)
 void Shell::screenList()
 {
     //std::cout << "[i] list all running processes." << std::endl;
-    int totalCores = 4;
-
-    std::vector<ScreenS*> runningProcesses;
-    std::vector<ScreenS*> finishedProcesses;
-
-    for (const auto& console : consoles) {
-        ScreenS* screenProcess = dynamic_cast<ScreenS*>(console.get());
-        if (screenProcess) {
-            int current = screenProcess->getCurrentLine();
-            int total = screenProcess->getTotalLineCount();
-
-            if (current < total) {
-                runningProcesses.push_back(screenProcess);
-            }
-            else {
-                finishedProcesses.push_back(screenProcess);
-            }
-        }
-    }
-
-    // CPU usage summary
-    int runningCount = runningProcesses.size();
-    int finishedCount = finishedProcesses.size();
-    int usedCores = runningCount;
-    int availableCores = std::max(0, totalCores - usedCores);
-    int cpuUtil = (usedCores * 100) / totalCores;
-
-    std::cout << "\nCPU Utilization: " << cpuUtil << "%\n";
-    std::cout << "Cores Used: " << usedCores << "\n";
-    std::cout << "Cores Available: " << availableCores << "\n";
-
-    std::cout << "\nRunning Processes (" << runningCount << "):\n";
-    for (ScreenS* process : runningProcesses) {
-        process->printStatusLine(false); // still running
-    }
-
-    std::cout << "\nFinished Processes (" << finishedCount << "):\n";
-    for (ScreenS* process : finishedProcesses) {
-        process->printStatusLine(true); // finished
-    }
+    ScreenList listView(consoles);
+    listView.display();
 }
 
 void Shell::schedulerTest()

@@ -3,6 +3,6 @@
 
 AConsole::AConsole(String name) : name(std::move(name)) {}
 
-AConsole::String AConsole::getName(){
+AConsole::String AConsole::getName() const {
     return name;
 }

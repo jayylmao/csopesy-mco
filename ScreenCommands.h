@@ -16,8 +16,6 @@ public:
     int getTotalLineCount() const { return totalLineCount; }
     std::string getCreationTimestamp() const { return creationTimestamp; }
 
-    void printStatusLine(bool isFinished) const;
-
 private:
     int currentLine;
     int totalLineCount;
