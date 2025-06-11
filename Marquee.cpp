@@ -1,8 +1,8 @@
 #include "Marquee.h"
 
-constexpr int DISPLAY_OFFSET = 3;
+constexpr short DISPLAY_OFFSET = 3;
 
-Marquee::Marquee(int refreshRate, const std::string message)
+Marquee::Marquee(short refreshRate, const std::string message)
 {
 	// get info from the screen buffer.
 	CONSOLE_SCREEN_BUFFER_INFO buffer;
@@ -41,25 +41,25 @@ void Marquee::addChar(char c)
 void Marquee::deleteChar()
 {
 	// do nothing if input is already empty.
-	if (input.length() == 0) {
+	if (input.empty()) {
 		return;
 	}
 
 	input.pop_back();
 }
 
-void Marquee::setWidth(int width)
+void Marquee::setWidth(short width)
 {
 	this->width = width;
 }
 
-void Marquee::setHeight(int height)
+void Marquee::setHeight(short height)
 {
 	// subtract to make room for header and prompt.
 	this->height = height - DISPLAY_OFFSET;
 }
 
-void Marquee::setRefreshRate(int n)
+void Marquee::setRefreshRate(short n)
 {
 	this->refreshRate = n;
 }
@@ -69,7 +69,7 @@ void Marquee::setMessage(const std::string message)
 	this->message = message;
 }
 
-void Marquee::setXPos(int x)
+void Marquee::setXPos(short x)
 {
 	if (x > getWidth()) {
 		this->xPos = width;
@@ -82,7 +82,7 @@ void Marquee::setXPos(int x)
 	}
 }
 
-void Marquee::setYPos(int y)
+void Marquee::setYPos(short y)
 {
 	if (y > getHeight()) {
 		this->yPos = getHeight();
@@ -96,7 +96,7 @@ void Marquee::setYPos(int y)
 }
 
 
-int Marquee::getRefreshRate() const
+short Marquee::getRefreshRate() const
 {
 	return 1000 / this->refreshRate;
 }
@@ -106,22 +106,22 @@ std::string Marquee::getMessage() const
 	return this->message;
 }
 
-int Marquee::getXPos() const
+short Marquee::getXPos() const
 {
 	return this->xPos;
 }
 
-int Marquee::getYPos() const
+short Marquee::getYPos() const
 {
 	return this->yPos;
 }
 
-int Marquee::getWidth() const
+short Marquee::getWidth() const
 {
 	return this->width;
 }
 
-int Marquee::getHeight() const
+short Marquee::getHeight() const
 {
 	return this->height;
 }
@@ -136,12 +136,12 @@ std::string Marquee::getProcessedInput() const
 	return this->processedInput;
 }
 
-int Marquee::getXDir() const
+short Marquee::getXDir() const
 {
 	return this->xDir;
 }
 
-int Marquee::getYDir() const
+short Marquee::getYDir() const
 {
 	return this->yDir;
 }
@@ -156,10 +156,10 @@ void Marquee::setQuit(bool q)
 	this->quit = q;
 }
 
-void Marquee::setCursorPos(int x, int y)
+void Marquee::setCursorPos(short x, short y)
 {
-	// create set of coordinates from x and y integers.
-	COORD c = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
+	// create set of coordinates from given x and y.
+	COORD c = { x, y };
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 }
 
@@ -173,12 +173,12 @@ void Marquee::setInput(const std::string input)
 	this->input = input;
 }
 
-void Marquee::setXDir(int dir)
+void Marquee::setXDir(short dir)
 {
 	this->xDir = dir;
 }
 
-void Marquee::setYDir(int dir)
+void Marquee::setYDir(short dir)
 {
 	this->yDir = dir;
 }
@@ -204,6 +204,10 @@ void Marquee::processInput()
 		// exit marquee console if command is given.
 		if (getProcessedInput() == "exit") {
 			setQuit(true);
+		}
+		else if (getProcessedInput() == "clear") {
+			std::system("cls");
+			setProcessedInput("");
 		}
 	}
 }

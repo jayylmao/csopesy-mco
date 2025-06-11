@@ -6,10 +6,10 @@
 
 #include "shell.h"
 
-#define MARQUEE_RIGHT 1
-#define MARQUEE_UP 1
-#define MARQUEE_LEFT -1
-#define MARQUEE_DOWN -1
+constexpr short MARQUEE_RIGHT = 1;
+constexpr short MARQUEE_UP = 1;
+constexpr short MARQUEE_LEFT = -1;
+constexpr short MARQUEE_DOWN = -1;
 
 class Marquee {
 public:
@@ -18,7 +18,7 @@ public:
 	 * @param refreshRate Set screen's refresh rate.
 	 * @param message Set marquee message.
 	 */
-	Marquee(int refreshRate, const std::string message);
+	Marquee(short refreshRate, const std::string message);
 
 	/**
 	 * @brief Start marquee program interactive loop.
@@ -39,18 +39,18 @@ public:
 	/**
 	 * @brief Set the width of the terminal.
 	 */
-	void setWidth(int width);
+	void setWidth(short width);
 
 	/**
 	 * @brief Set the height of the terminal.
 	 */
-	void setHeight(int height);
+	void setHeight(short height);
 
 	/**
 	 * @brief Set the screen's update speed.
 	 * @param n Frequency of display refresh in frames per second.
 	 */
-	void setRefreshRate(int n);
+	void setRefreshRate(short n);
 
 	/**
 	 * @brief Set the message to be displayed in the marquee.
@@ -61,7 +61,7 @@ public:
 	/**
 	 * @brief Get frequency of screen redraw in milliseconds (1000 / refresh rate).
 	 */
-	int getRefreshRate() const;
+	short getRefreshRate() const;
 
 	/**
 	 * @brief Get message to display in marquee.
@@ -81,32 +81,32 @@ public:
 	/**
 	 * @brief Get X-coordinate of marquee text.
 	 */
-	int getXPos() const;
+	short getXPos() const;
 
 	/**
 	 * @brief Get Y-coordinate of marquee text.
 	 */
-	int getYPos() const;
+	short getYPos() const;
 
 	/**
 	 * @brief Get screen width.
 	 */
-	int getWidth() const;
+	short getWidth() const;
 
 	/**
 	 * @brief Get screen height.
 	 */
-	int getHeight() const;
+	short getHeight() const;
 
 	/**
 	 * @brief Get the horizontal direction of the marquee.
 	 */
-	int getXDir() const;
+	short getXDir() const;
 
 	/**
 	 * @brief Get the vertical direction of the marquee.
 	 */
-	int getYDir() const;
+	short getYDir() const;
 
 	/**
 	 * @brief Check if user requests quit.
@@ -124,7 +124,7 @@ public:
 	 * @param x X-coordinate to move cursor to.
 	 * @param y Y-coordinate to move cursor to.
 	 */
-	void setCursorPos(int x, int y);
+	void setCursorPos(short x, short y);
 
 	/**
 	 * @brief Set input to a given string.
@@ -142,23 +142,23 @@ public:
 	 * @brief Set marquee x-coordinate.
 	 * @param x X-coordinate to display marquee at.
 	 */
-	void setXPos(int x);
+	void setXPos(short x);
 
 	/**
 	 * @brief Set marquee y-coordinate.
 	 * @param y Y-coordinate to display marquee at.
 	 */
-	void setYPos(int y);
+	void setYPos(short y);
 
 	/**
 	 * @brief Toggle the horizontal direction of the marquee.
 	 */
-	void setXDir(int dir);
+	void setXDir(short dir);
 
 	/**
 	 * @brief Toggle the vertical direction of the marquee.
 	 */
-	void setYDir(int dir);
+	void setYDir(short dir);
 
 	/**
 	 * @brief Process current input and move it to previously processed input.
@@ -173,11 +173,11 @@ public:
 private:
 	std::string processedInput; // store last processed command.
 	std::string input; // screen is redrawn every frame, so input needs to be stored. cin won't work.
-	int xPos; // x-coordinate of marquee text.
-	int yPos; // y-coordinate of marquee text.
-	int width; // width of the screen that marquee will bounce around.
-	int height; // height of the screen that marquee will bounce around.
-	int refreshRate; // frequency of screen redraw.
+	short xPos; // x-coordinate of marquee text.
+	short yPos; // y-coordinate of marquee text.
+	short width; // width of the screen that marquee will bounce around.
+	short height; // height of the screen that marquee will bounce around.
+	short refreshRate; // frequency of screen redraw.
 	std::string message; // marquee message to display.
 
 	int xDir; // horizontal direction of the marquee.
