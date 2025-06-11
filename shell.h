@@ -2,7 +2,11 @@
 // Created by jaymi on 13/05/2025.
 //
 #include "AConsole.h"
+#include "ScreenCommands.h"
+#include "ScreenList.h"
+
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>

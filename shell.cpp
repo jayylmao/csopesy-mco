@@ -1,15 +1,7 @@
 //
 // Created by jaymi on 13/05/2025.
 //
-
 #include "shell.h"
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include "ScreenCommands.h"
-#include "ScreenList.h"
-
 
 Shell::Shell()
 {
@@ -80,7 +72,7 @@ void Shell::screen(std::vector<std::string> args)
             return;
         }
         std::system("cls");
-        static int nextPID = 1; //first proceess ID
+        static int nextPID = 1; //first process ID
         std::string processName = args[1];
         int pid = nextPID++;
 
