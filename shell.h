@@ -1,6 +1,5 @@
-//
-// Created by jaymi on 13/05/2025.
-//
+#pragma once
+
 #include "AConsole.h"
 #include "ScreenCommands.h"
 #include "ScreenList.h"
@@ -10,9 +9,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#ifndef SHELL_H
-#define SHELL_H
 
 /**
  * @class Shell
@@ -125,7 +121,3 @@ private:
     int nextPID = 1;
 
 };
-
-
-
-#endif //SHELL_H
