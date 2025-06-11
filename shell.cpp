@@ -1,12 +1,7 @@
 //
 // Created by jaymi on 13/05/2025.
 //
-
 #include "shell.h"
-
-#include <iostream>
-#include <string>
-#include <vector>
 
 Shell::Shell()
 {
@@ -62,13 +57,70 @@ void Shell::screen(std::vector<std::string> args)
 {
     // no argument given to screen.
     if (args.size() < 1) {
-        std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
+        std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to view a process, and -ls to list the running processes." << std::endl;
         return;
     } // switch to list screen command.
-    else if (args[0] == "-ls") {
+    else if (args[0] == "-ls") { //SCREEN -LS
         screenList();
         return;
     } // too many arguments given to screen.
+  
+
+    else if (args[0] == "-s") { //SCREEN - S
+        if (args.size() < 2) {
+            std::cout << "[*] You must provide a process name. Usage: screen -s <processname>" << std::endl;
+            return;
+        }
+        std::system("cls");
+        static int nextPID = 1; //first process ID
+        std::string processName = args[1];
+        int pid = nextPID++;
+
+        //simulated total lines
+        int totalLines = 50;
+
+        auto newConsole = std::make_unique<ScreenS>(processName, totalLines, pid);
+        newConsole->onEnabled(); // runs child console (displays and waits for "exit")
+
+        // Save the process
+        consoles.push_back(std::move(newConsole));
+
+        //clear();
+        std::system("cls");
+        printHeader();
+
+    }
+
+
+    else if (args[0] == "-r") { // SCREEN -R
+        if (args.size() < 2) {
+            std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
+            return;
+        }
+
+        std::string processName = args[1];
+        bool found = false;
+
+        for (const auto& console : consoles) {
+            if (console->getName() == processName) {
+                std::system("cls");
+                console->onEnabled(); // Enter interactive loop
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            std::cout << "[*] No process with name '" << processName << "' found.\n";
+        }
+        else {
+            // After exiting child process, return to main screen
+            std::system("cls");
+            printHeader(); // Re-show your main screen
+        }
+    }
+
+
     else if (args.size() > 2) {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
@@ -89,7 +141,9 @@ void Shell::screen(std::vector<std::string> args)
 
 void Shell::screenList()
 {
-    std::cout << "[i] list all running processes." << std::endl;
+    //std::cout << "[i] list all running processes." << std::endl;
+    ScreenList listView(consoles);
+    listView.display();
 }
 
 void Shell::schedulerTest()
@@ -131,12 +185,16 @@ void Shell::exit()
 
 void Shell::printHeader()
 {
-    std::cout << " _______ ___  ___  ___ ___ __ __\n"
-                 "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
-                 "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
-                 "           /_/           /___/  \n"
-                 "Welcome to the CSOPESY command line.\n";
+    std::cout << "\033[1;36m" // Bright cyan
+        << " _______ ___  ___  ___ ___ __ __\n"
+        "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
+        "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
+        "           /_/           /___/  \n"
+        << "\033[1;32m" // Bright green
+        << "Welcome to the CSOPESY command line. Type 'help' for a list of commands.\n"
+        << "\033[0m"; // Reset color
 }
+
 
 void Shell::splitString(std::string const &string, char const delim, std::vector<std::string> &tokens)
 {
