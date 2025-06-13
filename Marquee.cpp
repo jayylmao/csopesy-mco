@@ -185,29 +185,31 @@ void Marquee::setYDir(short dir)
 
 void Marquee::processInput()
 {
-	if (_kbhit()) {
-		char c = getch();
+	while (!isQuit()) {
+		if (_kbhit()) {
+			char c = getch();
 
-		// process input if carriage return is detected.
-		if (c == '\r') {
-			setProcessedInput(getInput());
-			setInput("");
-			std::system("cls");
-		}
-		else if (c == '\b') {
-			deleteChar();
-		}
-		else {
-			addChar(c);
-		}
+			// process input if carriage return is detected.
+			if (c == '\r') {
+				setProcessedInput(getInput());
+				setInput("");
+				std::system("cls");
+			}
+			else if (c == '\b') {
+				deleteChar();
+			}
+			else {
+				addChar(c);
+			}
 
-		// exit marquee console if command is given.
-		if (getProcessedInput() == "exit") {
-			setQuit(true);
-		}
-		else if (getProcessedInput() == "clear") {
-			std::system("cls");
-			setProcessedInput("");
+			// exit marquee console if command is given.
+			if (getProcessedInput() == "exit") {
+				setQuit(true);
+			}
+			else if (getProcessedInput() == "clear") {
+				std::system("cls");
+				setProcessedInput("");
+			}
 		}
 	}
 }
@@ -235,22 +237,20 @@ void Marquee::moveMarquee()
 	}
 }
 
-void Marquee::start()
+void Marquee::refreshDisplay()
 {
-	Shell::clear();
 	while (!isQuit()) {
 		int currLine = 0;
 		const std::string prompt = "user ~/marquee > ";
-
 		// refresh screen
 		Sleep(getRefreshRate());
 		std::system("cls");
-		
+
 		// display header.
 		setCursorPos(0, currLine);
 		std::cout << "********************************" << std::endl
-				  << "* Displaying a marquee console *" << std::endl
-				  << "********************************" << std::endl;
+			<< "* Displaying a marquee console *" << std::endl
+			<< "********************************" << std::endl;
 
 		moveMarquee();
 		setCursorPos(getXPos(), getYPos() + DISPLAY_OFFSET);
@@ -268,8 +268,5 @@ void Marquee::start()
 		setCursorPos(0, currLine);
 		std::cout << prompt << getInput() << std::endl;
 		setCursorPos(prompt.length() + getInput().length(), currLine);
-
-		processInput();
 	}
-	Shell::clear();
 }

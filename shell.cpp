@@ -138,7 +138,14 @@ void Shell::screenList()
 void Shell::marquee()
 {
     Marquee marquee(60, "Hello world in marquee!");
-    marquee.start();
+    
+    std::thread inputThread(&Marquee::processInput, std::ref(marquee));
+    std::thread displayThread(&Marquee::refreshDisplay, std::ref(marquee));
+
+    inputThread.join();
+    displayThread.join();
+
+    Shell::clear();
 }
 
 void Shell::schedulerTest()

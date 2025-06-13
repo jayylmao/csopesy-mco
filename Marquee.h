@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <string>
 #include <conio.h>
-
 #include "shell.h"
 
 constexpr short MARQUEE_RIGHT = 1;
@@ -19,11 +18,6 @@ public:
 	 * @param message Set marquee message.
 	 */
 	Marquee(short refreshRate, const std::string message);
-
-	/**
-	 * @brief Start marquee program interactive loop.
-	 */
-	void start();
 
 	/**
 	 * @brief Append a character to the input string.
@@ -169,6 +163,11 @@ public:
 	 * @brief Move marquee based on x-direction and y-direction.
 	 */
 	void moveMarquee();
+
+	/**
+	 * @brief Redraw the display with new contents.
+	 */
+	void refreshDisplay();
 
 private:
 	std::string processedInput; // store last processed command.
