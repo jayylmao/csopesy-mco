@@ -27,9 +27,8 @@ public:
 	bool hasFinished() const;
 
 private:
-	std::string name;
-	int pid;
-	int totalInstructions;
-	int remainingInstructions;
-
+	std::string name; // name of the process
+	int pid; // unique id assigned to process
+	int totalInstructions; // number of instructions contained in process to execute.
+	int remainingInstructions; // number of instructions left to execute.
 };

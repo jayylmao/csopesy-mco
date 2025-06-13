@@ -192,7 +192,6 @@ void Shell::printHeader()
         << "\033[0m"; // Reset color
 }
 
-
 void Shell::splitString(std::string const &string, char const delim, std::vector<std::string> &tokens)
 {
     // push an empty string and return to avoid going through the splitting process if input is empty.
