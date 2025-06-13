@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <string>
 #include <conio.h>
+#include <thread>
+#include <chrono>
 #include "shell.h"
 
 constexpr short MARQUEE_RIGHT = 1;

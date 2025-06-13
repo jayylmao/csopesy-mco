@@ -243,7 +243,7 @@ void Marquee::refreshDisplay()
 		int currLine = 0;
 		const std::string prompt = "user ~/marquee > ";
 		// refresh screen
-		Sleep(getRefreshRate());
+		std::this_thread::sleep_for(std::chrono::milliseconds(getRefreshRate()));
 		std::system("cls");
 
 		// display header.
