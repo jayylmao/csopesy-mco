@@ -28,12 +28,10 @@ public:
 	static void destroy();
 
 	/**
-	 * @brief 
+	 * @brief Print the 
 	 */
 	void drawConsole() const;
 
 private:
 	ConsoleManager();
-
-
 };
