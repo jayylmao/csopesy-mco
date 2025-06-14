@@ -22,3 +22,13 @@ bool Process::hasFinished() const
 {
 	return remainingInstructions == 0;
 }
+
+int Process::getCurrentLine()
+{
+	return this->totalInstructions - this->remainingInstructions;
+}
+
+int Process::getPID()
+{
+	return this->pid;
+}
