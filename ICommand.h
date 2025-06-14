@@ -16,7 +16,7 @@ public:
 		FOR
 	};
 
-	ICommand(Type type);
+	ICommand(int pid, Type type);
 	
 	/**
 	 * @brief Get the type of command.
@@ -29,5 +29,6 @@ public:
 	virtual void execute();
 
 protected:
+	int pid;
 	Type type; // command type.
 };
