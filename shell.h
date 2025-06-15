@@ -40,7 +40,7 @@ public:
     /**
      * @brief Continuously create new process instances until the user calls the stop command.
      */
-    void schedulerTest();
+    void schedulerStart();
 
     /**
      * @brief Stop the creation of new process instances.

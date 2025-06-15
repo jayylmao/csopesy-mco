@@ -151,7 +151,7 @@ void Shell::screenList()
     }
 }
 
-void Shell::schedulerTest()
+void Shell::schedulerStart()
 {
     std::cout << "[i] scheduler-start command recognized. Doing something." << std::endl;
 }
@@ -243,7 +243,7 @@ void Shell::prompt()
         screen(sliced_input_tokens);
     }
     else if (input_tokens[0] == "scheduler-start") {
-        schedulerTest();
+        schedulerStart();
     }
     else if (input_tokens[0] == "scheduler-stop") {
         schedulerStop();
@@ -264,7 +264,7 @@ void Shell::prompt()
             << "    - screen -s\n"
             << "    - screen -r\n"
             << "    - screen -ls\n"
-            << "  scheduler-test\n"
+            << "  scheduler-start\n"
             << "  scheduler-stop\n"
             << "  report-util\n"
             << "  clear\n"
