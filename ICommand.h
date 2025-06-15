@@ -21,7 +21,7 @@ public:
 	/**
 	 * @brief Get the type of command.
 	 */
-	Type getType();
+	Type getType() const;
 
 	/**
 	 * @brief Execute the instruction. The action performed depends on the implementation.
