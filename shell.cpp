@@ -143,9 +143,9 @@ void Shell::screenList()
     listView.display();
 }
 
-void Shell::schedulerTest()
+void Shell::schedulerStart()
 {
-    std::cout << "[i] scheduler-test command recognized. Doing something." << std::endl;
+    std::cout << "[i] scheduler-start command recognized. Doing something." << std::endl;
 }
 
 void Shell::schedulerStop()
@@ -234,8 +234,8 @@ void Shell::prompt()
         std::vector<std::string> sliced_input_tokens(input_tokens.begin() + 1, input_tokens.end());
         screen(sliced_input_tokens);
     }
-    else if (input_tokens[0] == "scheduler-test") {
-        schedulerTest();
+    else if (input_tokens[0] == "scheduler-start") {
+        schedulerStart();
     }
     else if (input_tokens[0] == "scheduler-stop") {
         schedulerStop();
@@ -256,7 +256,7 @@ void Shell::prompt()
             << "    - screen -s\n"
             << "    - screen -r\n"
             << "    - screen -ls\n"
-            << "  scheduler-test\n"
+            << "  scheduler-start\n"
             << "  scheduler-stop\n"
             << "  report-util\n"
             << "  clear\n"
