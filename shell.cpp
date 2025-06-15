@@ -140,7 +140,8 @@ void Shell::screenList()
         if (!(proc->hasFinished())) {
             std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
             std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
-                << ")\tCore: " << coreDisplay << std::endl;
+                << ")\tCore: " << coreDisplay << "\t" << proc->getCurrentLine() << "/" << proc->getTotalLines()
+                << std::endl;
         }
     }
 
@@ -149,9 +150,10 @@ void Shell::screenList()
         << "Finished processes" << std::endl;
     for (const auto& proc : processes) {
         if (proc->hasFinished()) {
-            std::string coreDisplay = (proc->getCoreId() == -1) ? "Finished" : std::to_string(proc->getCoreId());
+            std::string coreDisplay = (proc->getCoreId() == -1) ? "N/A" : std::to_string(proc->getCoreId());
             std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
-                << ")\tCore: " << coreDisplay << std::endl;
+                << ")\tFinished " << proc->getCurrentLine() << "/" << proc->getTotalLines()
+                << std::endl;
         }
     }
 }

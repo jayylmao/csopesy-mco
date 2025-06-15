@@ -63,12 +63,12 @@ void FCFSScheduler::coreWorker(int coreId)
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
                 // Log using PrintCommand
-                std::string logMsg = "[Line " + std::to_string(i + 1) + "] PID: " + std::to_string(pid);
+                std::string logMsg = "[" + std::to_string(i + 1) + "] Hello world from " + process->getName();
+                // std::string logMsg = "[Line " + std::to_string(i + 1) + "] PID: " + std::to_string(pid);
                 PrintCommand cmd(logMsg, coreId, process->getName(), pid); // pass pid
                 cmd.execute();
-
+                process->executeInstruction();
             }
-            std::cout << "[Debug] Process " << pid << " finished on Core " << coreId << std::endl;
             process->setFinished(true);
         }
     }

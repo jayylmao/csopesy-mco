@@ -7,6 +7,8 @@
 #include <thread>
 #include <fstream>
 
+#include <filesystem> // for checking file existence
+
 /**
  * @brief Instantiate a print command with a specified message.
  */
@@ -30,9 +32,18 @@ void PrintCommand::execute() {
         << ") Core:" << coreId
         << " \"" << message << "\"";
 
+    // Check if the file already exists
+    bool fileExists = std::filesystem::exists(procName + ".txt");
+
     std::ofstream file(procName + ".txt", std::ios::app);
     if (file.is_open()) {
+        if (!fileExists) {
+            file << "Process Name: " << procName << "\nLogs:\n" << std::endl;
+        }
         file << timeStream.str() << std::endl;
         file.close();
+    }
+    else {
+        std::cerr << "[ERROR] Failed to open file: " << procName << ".txt" << std::endl;
     }
 }
