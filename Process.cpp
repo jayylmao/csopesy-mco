@@ -1,12 +1,9 @@
 #include "Process.h"
 
 Process::Process(const std::string& name, int pid, int instructionCount)
+	: name(name), pid(pid), totalInstructions(instructionCount),
+	remainingInstructions(instructionCount), coreId(-1), finished(false)
 {
-	this->name = name;
-	this->pid = pid;
-	this->totalInstructions = instructionCount;
-	this->remainingInstructions = instructionCount;
-
 	// store creation timestamp.
 	auto now = std::chrono::system_clock::now();
 	std::time_t raw_time = std::chrono::system_clock::to_time_t(now);
@@ -19,21 +16,33 @@ Process::Process(const std::string& name, int pid, int instructionCount)
 
 void Process::executeInstruction()
 {
-	remainingInstructions--;
+	std::lock_guard<std::mutex> lock(mtx);
+	if (remainingInstructions > 0) {
+		--remainingInstructions;
+	}
 }
 
 int Process::getRemainingInstructions()
 {
+	std::lock_guard<std::mutex> lock(mtx);
 	return remainingInstructions;
 }
 
 bool Process::hasFinished() const
 {
-	return remainingInstructions == 0;
+	std::lock_guard<std::mutex> lock(mtx);
+	return finished;
+}
+
+void Process::setFinished(bool value)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	finished = value;
 }
 
 int Process::getCurrentLine()
 {
+	std::lock_guard<std::mutex> lock(mtx);
 	return this->totalInstructions - this->remainingInstructions;
 }
 
@@ -50,4 +59,21 @@ std::string Process::getName()
 std::string Process::getCreationTimestamp() {
 	
 	return this->creationTimestamp;
+}
+
+void Process::setCoreId(int id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	coreId = id;
+}
+
+int Process::getCoreId() const
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	return coreId;
+}
+
+int Process::getTotalLines() const
+{
+	return totalInstructions;
 }

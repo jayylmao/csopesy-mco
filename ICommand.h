@@ -17,6 +17,7 @@ public:
 	};
 
 	ICommand(int pid, Type type);
+	virtual ~ICommand() = default; // Add virtual destructor for proper cleanup
 	
 	/**
 	 * @brief Get the type of command.

@@ -135,18 +135,23 @@ void Shell::screenList()
     }
 
     std::cout << "--------------------" << std::endl
-              << "Running processes" << std::endl;
+        << "Running processes" << std::endl;
     for (const auto& proc : processes) {
         if (!(proc->hasFinished())) {
-            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp() << ")\tCore: " << std::endl;
+            std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
+            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
+                << ")\tCore: " << coreDisplay << std::endl;
         }
     }
 
+
     std::cout << "--------------------" << std::endl
-              << "Finished processes" << std::endl;
+        << "Finished processes" << std::endl;
     for (const auto& proc : processes) {
         if (proc->hasFinished()) {
-            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp() << ")\tCore: " << std::endl;
+            std::string coreDisplay = (proc->getCoreId() == -1) ? "Finished" : std::to_string(proc->getCoreId());
+            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
+                << ")\tCore: " << coreDisplay << std::endl;
         }
     }
 }

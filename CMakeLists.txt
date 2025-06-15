@@ -15,4 +15,10 @@ add_executable(main main.cpp
         "ProcessManager.h"
         "ProcessManager.cpp"
         "FCFSScheduler.h"
-        "FCFSScheduler.cpp")
+        "FCFSScheduler.cpp"
+        "PrintCommand.h"
+        "PrintCommand.cpp"
+        "ICommand.h"
+        "ICommand.cpp"
+
+)
