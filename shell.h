@@ -2,13 +2,16 @@
 
 #include "AConsole.h"
 #include "ScreenCommands.h"
-#include "ScreenList.h"
+#include "ConsoleManager.h"
+#include "ProcessManager.h"
+#include "FCFSScheduler.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
 
 /**
  * @class Shell
@@ -16,7 +19,7 @@
  */
 class Shell {
 public:
-    Shell();
+    Shell(int cores);
 
     /**
      * @brief Print header and initialize operating system.
@@ -111,13 +114,20 @@ public:
      */
     void setFocusedPID(int pid);
 
+    /**
+     * @brief Get the number of cores.
+     */
+    int getCores();
+
 private:
     bool init; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
 	int focusedPID; // ID of focused process. The OS main menu is 0.
+    int cores;
 
-    //not using ConsoleManageryet
-    std::vector<std::unique_ptr<AConsole>> consoles;
     int nextPID = 1;
 
+    FCFSScheduler scheduler;
+    ConsoleManager consoleManager;
+    ProcessManager processManager;
 };

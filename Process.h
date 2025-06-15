@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <stdexcept>
+#include <chrono>
 
 /**
  * @class Process
@@ -43,9 +45,23 @@ public:
 	 */
 	int getPID();
 
+	/**
+	 * @brief Get the program's name.
+	 * @return Program's name.
+	 */
+	std::string getName();
+
+	/**
+	 * @brief Get the time of the process's creation.
+	 * @return String of process's formatted timestamp.
+	 */
+	std::string getCreationTimestamp();
+
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
 	int totalInstructions; // number of instructions contained in process to execute.
 	int remainingInstructions; // number of instructions left to execute.
+
+	std::string creationTimestamp;
 };

@@ -1,7 +1,9 @@
 #pragma once
 #include <memory>
+#include <string>
 #include <vector>
 #include "AConsole.h"
+#include "Process.h"
 
 #include <unordered_map>
 #include <Windows.h>
@@ -9,29 +11,14 @@
 class ConsoleManager {
 public:
 	// create type definition for table that manages consoles.
-	typedef std::unordered_map<String, std::shared_ptr<AConsole>> ConsoleTable;
+	typedef std::unordered_map<std::string, std::shared_ptr<AConsole>> ConsoleTable;
 
 	/**
-	 * @brief Get instance of Console Manager.
-	 * @return Instance of Console Manager.
+	 * @brief Display the process's info in a console.
 	 */
-	static ConsoleManager* getInstance();
+	void drawConsole(Process& process) const;
 
-	/**
-	 * @brief Initialize console manager.
-	 */
-	static void initialize();
 
-	/**
-	 * @brief Destroy instance when finished.
-	 */
-	static void destroy();
+	ConsoleTable consoleTable;
 
-	/**
-	 * @brief Print the 
-	 */
-	void drawConsole() const;
-
-private:
-	ConsoleManager();
 };

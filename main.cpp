@@ -12,7 +12,7 @@ void enableVirtualTerminal() {
 int main()
 {  
     enableVirtualTerminal();
-    Shell shell;
+    Shell shell(4);
     shell.initialize();
 
     while (!shell.getQuit()) {

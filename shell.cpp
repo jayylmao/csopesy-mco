@@ -1,10 +1,12 @@
 #include "shell.h"
 
-Shell::Shell()
+Shell::Shell(int cores) :
+    init(false),
+    quit(false),
+    focusedPID(0),
+    cores(cores),
+    scheduler(cores)
 {
-    init = false;
-    quit = false;
-    focusedPID = 0;
 }
 
 bool Shell::getQuit() const
@@ -38,15 +40,24 @@ void Shell::setFocusedPID(const int pid)
     focusedPID = pid;
 }
 
+int Shell::getCores()
+{
+    return this->cores;
+}
+
 void Shell::initialize()
 {
     if (!init) {
         init = true;
+
+        std::thread schedulerThread(&FCFSScheduler::runScheduler, &scheduler);
+        schedulerThread.join();
+
         printHeader();
         prompt();
     }
     else {
-        std::cout << "[i] initialize command recognized. Doing something." << std::endl;
+        std::cout << "[i] The operating system has already been initialized." << std::endl;
     }
 }
 
@@ -69,18 +80,14 @@ void Shell::screen(std::vector<std::string> args)
             return;
         }
         std::system("cls");
-        static int nextPID = 1; //first process ID
         std::string processName = args[1];
-        int pid = nextPID++;
-
+        
         //simulated total lines
-        int totalLines = 50;
+        int totalLines = 100;
+        processManager.createProcess(processName, totalLines);
 
-        auto newConsole = std::make_unique<ScreenS>(processName, totalLines, pid);
-        newConsole->onEnabled(); // runs child console (displays and waits for "exit")
-
-        // Save the process
-        consoles.push_back(std::move(newConsole));
+        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
+        scheduler.addProcess(ptr);
 
         //clear();
         std::system("cls");
@@ -97,24 +104,6 @@ void Shell::screen(std::vector<std::string> args)
 
         std::string processName = args[1];
         bool found = false;
-
-        for (const auto& console : consoles) {
-            if (console->getName() == processName) {
-                std::system("cls");
-                console->onEnabled(); // Enter interactive loop
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            std::cout << "[*] No process with name '" << processName << "' found.\n";
-        }
-        else {
-            // After exiting child process, return to main screen
-            std::system("cls");
-            printHeader(); // Re-show your main screen
-        }
     }
 
 
@@ -138,14 +127,33 @@ void Shell::screen(std::vector<std::string> args)
 
 void Shell::screenList()
 {
-    //std::cout << "[i] list all running processes." << std::endl;
-    ScreenList listView(consoles);
-    listView.display();
+    std::vector<Process*> processes = processManager.listProcesses();
+
+    if (processes.empty()) {
+        std::cout << "[!] No processes are running." << std::endl;
+        return;
+    }
+
+    std::cout << "--------------------" << std::endl
+              << "Running processes" << std::endl;
+    for (const auto& proc : processes) {
+        if (!(proc->hasFinished())) {
+            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp() << ")\tCore: " << std::endl;
+        }
+    }
+
+    std::cout << "--------------------" << std::endl
+              << "Finished processes" << std::endl;
+    for (const auto& proc : processes) {
+        if (proc->hasFinished()) {
+            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp() << ")\tCore: " << std::endl;
+        }
+    }
 }
 
 void Shell::schedulerTest()
 {
-    std::cout << "[i] scheduler-test command recognized. Doing something." << std::endl;
+    std::cout << "[i] scheduler-start command recognized. Doing something." << std::endl;
 }
 
 void Shell::schedulerStop()
@@ -234,7 +242,7 @@ void Shell::prompt()
         std::vector<std::string> sliced_input_tokens(input_tokens.begin() + 1, input_tokens.end());
         screen(sliced_input_tokens);
     }
-    else if (input_tokens[0] == "scheduler-test") {
+    else if (input_tokens[0] == "scheduler-start") {
         schedulerTest();
     }
     else if (input_tokens[0] == "scheduler-stop") {

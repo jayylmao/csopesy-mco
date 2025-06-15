@@ -1,6 +1,6 @@
 #include "FCFSScheduler.h"
 
-void FCFSScheduler::addProcess(const Process& process, int core = 0)
+void FCFSScheduler::addProcess(std::shared_ptr<Process> process, int core)
 {
 	if (core >= 0 && core < numCores) {
 		processQueues[core].push_back(process);
@@ -17,15 +17,15 @@ void FCFSScheduler::runScheduler()
 		for (int core = 0; core < numCores; core++) {
 			// if the queue isn't empty, execute the first process in the queue.
 			if (!processQueues[core].empty()) {
-				Process currProcess = processQueues[core].back();
+				std::shared_ptr<Process> currProcess = processQueues[core].back();
 				processQueues[core].pop_back();
 
 				// while the process hasn't finished, execute all instructions.
-				while (!currProcess.hasFinished()) {
-					currProcess.executeInstruction();
+				while (!currProcess->hasFinished()) {
+					currProcess->executeInstruction();
 				}
 
-				std::cout << "Process " << currProcess.getPID() << " has completed on core" << core + 1 << "." << std::endl;
+				std::cout << "Process " << currProcess->getPID() << " has completed on core" << core + 1 << "." << std::endl;
 			}
 		}
 	}

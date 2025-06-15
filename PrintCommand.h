@@ -1,6 +1,8 @@
 #pragma once
 #include "ICommand.h"
 #include <string>
+#include <iostream>
+#include <ofstream>
 
 /**
  * @class PrintCommand
@@ -16,8 +18,9 @@ public:
 	/**
 	 * @brief Execute the command. Temporary: print to a text file.
 	 */
-	void execute();
+	void execute() override;
 
 private:
 	std::string message;
+
 };
