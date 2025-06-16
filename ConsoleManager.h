@@ -1,26 +1,24 @@
 #pragma once
-
-#include <unordered_map>
 #include <memory>
+#include <string>
+#include <vector>
 #include "AConsole.h"
 #include "Process.h"
 
+#include <unordered_map>
+#include <Windows.h>
+
 class ConsoleManager {
 public:
-	using ConsoleTable = std::unordered_map<std::string, std::shared_ptr<AConsole>>;
+	// create type definition for table that manages consoles.
+	typedef std::unordered_map<std::string, std::shared_ptr<AConsole>> ConsoleTable;
 
-	static ConsoleManager* getInstance();
+	/**
+	 * @brief Display the process's info in a console.
+	 */
+	void drawConsole(Process& process) const;
 
-	void initialize();    
-	void destroy();      
-	void drawConsole(Process& process) const;  
-
-	void addConsole(const std::string& name, std::shared_ptr<AConsole> console);
-	std::shared_ptr<AConsole> getConsole(const std::string& name);
-
-private:
-	ConsoleManager() = default;
 
 	ConsoleTable consoleTable;
-	static ConsoleManager* instance;
+
 };

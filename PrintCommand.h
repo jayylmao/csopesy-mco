@@ -20,10 +20,7 @@ public:
 	 * @brief Execute the command. Temporary: print to a text file.
 	 */
 	void execute() override;
-	/**
-	*  @brief Sets the coreID for each instruction based on the core executing it.
-	*/
-	void setCoreID(int core) { coreID = core; }
+
 private:
 	std::string message;
 	int coreId;              
