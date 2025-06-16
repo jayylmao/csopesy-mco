@@ -128,6 +128,5 @@ private:
     int nextPID = 1;
 
     FCFSScheduler scheduler;
-    ConsoleManager consoleManager;
     ProcessManager processManager;
 };

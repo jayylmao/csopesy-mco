@@ -18,7 +18,22 @@
  */
 class Process {
 public:
+
+
+
 	Process(const std::string& name, int pid, int instructionCount);
+
+	/**
+	 * @brief Get the total number of instructions.
+	 * @return Total instruction count.
+	 */
+	int getTotalInstructions() const;
+
+	/**
+	 * @brief Add a command (instruction) to this process.
+	 * @param cmd A shared pointer to an ICommand object.
+	 */
+	void addCommand(std::shared_ptr<ICommand> cmd);
 
 	/**
 	 * @brief Run one of the process's instructions.
@@ -60,6 +75,18 @@ public:
 	 * @return String of process's formatted timestamp.
 	 */
 	std::string getCreationTimestamp();
+	/**
+	 * @brief Get a pointer to the current instruction to be executed.
+	 * @return Pointer to the current ICommand object.
+	 */
+	ICommand* getCurrentInstruction() {
+		return instructions[currentInstructionIndex].get();
+	}
+	/**
+	 * @brief Setter and getter for cores
+	 */
+	int getAssignedCore() const;
+	void setAssignedCore(int coreId);
 
 
 	void setFinished(bool value);
@@ -75,6 +102,9 @@ private:
 	int pid; // unique id assigned to process
 	int totalInstructions; // number of instructions contained in process to execute.
 	int remainingInstructions; // number of instructions left to execute.
+	int currentInstructionIndex = 0;
+
+	int assignedCore = 0; //unassiagned core ID SET TO 0
 
 	std::string creationTimestamp;
 

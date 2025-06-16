@@ -1,4 +1,5 @@
 #include "Process.h"
+#include "PrintCommand.h"
 
 Process::Process(const std::string& name, int pid, int instructionCount)
 	: name(name), pid(pid), totalInstructions(instructionCount),
@@ -12,6 +13,18 @@ Process::Process(const std::string& name, int pid, int instructionCount)
 	std::ostringstream oss;
 	oss << std::put_time(time_info, "%m/%d/%Y, %I:%M:%S %p");
 	creationTimestamp = oss.str();
+
+	//Generate 100 PrintCommands
+	for (int i=0; i<100; i++)
+	{
+		std::string msg = "Hello world from " + name + "!";
+		instructions.push_back(std::make_unique<PrintCommand>(pid, msg));
+	}
+}
+
+void Process::addCommand(std::shared_ptr<ICommand> cmd) 
+{
+	instructions.push_back(cmd);
 }
 
 void Process::executeInstruction()
@@ -44,6 +57,10 @@ int Process::getCurrentLine()
 {
 	std::lock_guard<std::mutex> lock(mtx);
 	return this->totalInstructions - this->remainingInstructions;
+}
+int Process::getTotalInstructions() const 
+{
+	return totalInstructions;
 }
 
 int Process::getPID()

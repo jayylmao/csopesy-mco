@@ -1,21 +1,39 @@
 #include "ConsoleManager.h"
 
-ConsoleManager* ConsoleManager::getInstance()
-{
-	return this;
+ConsoleManager* ConsoleManager::instance = nullptr;
+
+ConsoleManager* ConsoleManager::getInstance() {
+	if (!instance) {
+		instance = new ConsoleManager();
+	}
+	return instance;
 }
 
-void ConsoleManager::initialize()
-{
-
+void ConsoleManager::initialize() {
+	consoleTable.clear();
 }
 
-void ConsoleManager::destroy()
-{
-
+void ConsoleManager::destroy() {
+	delete instance;
+	instance = nullptr;
 }
 
-void ConsoleManager::drawConsole(Process& process) const
-{
 
+void ConsoleManager::drawConsole(Process& process) const {
+	auto it = consoleTable.find(process.getName());
+	if (it != consoleTable.end()) {
+		it->second->onEnabled();  
+	}
+}
+
+void ConsoleManager::addConsole(const std::string& name, std::shared_ptr<AConsole> console) {
+	consoleTable[name] = console;
+}
+
+std::shared_ptr<AConsole> ConsoleManager::getConsole(const std::string& name) {
+	auto it = consoleTable.find(name);
+	if (it != consoleTable.end()) {
+		return it->second;
+	}
+	return nullptr;
 }

@@ -13,7 +13,7 @@
  * @brief Instantiate a print command with a specified message.
  */
 PrintCommand::PrintCommand(const std::string& msg, int coreId, const std::string& procName, int pid)
-    : ICommand(pid, ICommand::PRINT), // You must pass something here
+    : ICommand(pid, ICommand::PRINT), 
     message(msg), coreId(coreId), procName(procName)
 {
 }

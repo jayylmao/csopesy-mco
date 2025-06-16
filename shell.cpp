@@ -7,6 +7,7 @@ Shell::Shell(int cores) :
     cores(cores),
     scheduler(cores)
 {
+
 }
 
 bool Shell::getQuit() const
@@ -89,6 +90,11 @@ void Shell::screen(std::vector<std::string> args)
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
         scheduler.addProcess(ptr);
 
+        //for Screen-s display stores it in hashmap
+        auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
+        ConsoleManager::getInstance()->addConsole(processName, screen);
+        screen->onEnabled();
+
         //clear();
         std::system("cls");
         printHeader();
@@ -104,13 +110,25 @@ void Shell::screen(std::vector<std::string> args)
 
         std::string processName = args[1];
         bool found = false;
+        //gets from map
+        std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
+        if (console) {
+            std::system("cls");
+            console->onEnabled();
+            std::system("cls");
+            printHeader();
+        }
+        else {
+            std::cout << "[*] No process with name '" << processName << "' found.\n";
+        }
     }
-
+        
 
     else if (args.size() > 2) {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     }
+
     else if (args[0] == "-s") {
         std::cout << "[*] Creating process..." << std::endl;
         return;
@@ -156,11 +174,15 @@ void Shell::screenList()
                 << std::endl;
         }
     }
+    std::cout << "--------------------" << std::endl;
 }
 
 void Shell::schedulerStart()
 {
-    std::cout << "[i] scheduler-start command recognized. Doing something." << std::endl;
+    std::cout << "[i] scheduler-start command recognized. Doing FCFS." << std::endl;
+    //thread
+    std::thread schedulerThread(&FCFSScheduler::runScheduler, &scheduler);
+    schedulerThread.detach();
 }
 
 void Shell::schedulerStop()
