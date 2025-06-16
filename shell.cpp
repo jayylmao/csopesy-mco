@@ -88,7 +88,11 @@ void Shell::screen(std::vector<std::string> args)
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
         scheduler.addProcess(ptr);
+        
 
+        auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
+        ConsoleManager::getInstance()->addConsole(processName, screen);
+        screen->onEnabled();
         //clear();
         std::system("cls");
         printHeader();
@@ -103,7 +107,18 @@ void Shell::screen(std::vector<std::string> args)
         }
 
         std::string processName = args[1];
-        bool found = false;
+        std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
+
+        if (console) {
+            std::system("cls");
+            console->onEnabled();
+            std::system("cls");
+            printHeader();
+        }
+        else {
+            std::cout << "[*] No process with name '" << processName << "' found.\n";
+        }
+        return;
     }
 
 
@@ -156,6 +171,7 @@ void Shell::screenList()
                 << std::endl;
         }
     }
+    std::cout << "--------------------" << std::endl;
 }
 
 void Shell::schedulerStart()

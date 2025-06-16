@@ -22,6 +22,7 @@ PrintCommand::PrintCommand(const std::string& msg, int coreId, const std::string
  * @brief Print a message to a text file.
  */
 void PrintCommand::execute() {
+    ICommand::execute();
     auto now = std::chrono::system_clock::now();
     std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
     std::tm localTime = *std::localtime(&currentTime);
