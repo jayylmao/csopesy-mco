@@ -10,10 +10,10 @@ void enableVirtualTerminal() {
 }
 
 int main()
-{  
+{
     enableVirtualTerminal();
     Shell shell(4);
-    shell.initialize();
+    shell.printHeader();  // Print header immediately
 
     while (!shell.getQuit()) {
         shell.prompt();

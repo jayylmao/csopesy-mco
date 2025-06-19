@@ -5,6 +5,7 @@
 #include "ConsoleManager.h"
 #include "ProcessManager.h"
 #include "FCFSScheduler.h"
+#include "ConfigManager.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -58,7 +59,7 @@ public:
      * @param delim Split string on delimiter character.
      * @param &tokens Reference to token vector to push tokens to.
      */
-    static void splitString(std::string const &string, char const delim, std::vector<std::string> &tokens);
+    static void splitString(std::string const& string, char const delim, std::vector<std::string>& tokens);
 
     /**
      * @brief Display prompt, ask user for input, and call other methods to handle command.
@@ -122,11 +123,12 @@ public:
 private:
     bool init; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
-	int focusedPID; // ID of focused process. The OS main menu is 0.
+    int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;
 
     int nextPID = 1;
 
     FCFSScheduler scheduler;
     ProcessManager processManager;
+    ConfigManager configManager;
 };

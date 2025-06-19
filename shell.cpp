@@ -45,19 +45,27 @@ int Shell::getCores()
     return this->cores;
 }
 
-void Shell::initialize()
-{
-    if (!init) {
-        init = true;
+void Shell::initialize() {
+    // Reload configuration every time
+    std::cout << "[i] Loading configuration..." << std::endl;
+    configManager.loadConfig("config.txt");
 
-        std::thread schedulerThread(&FCFSScheduler::runScheduler, &scheduler);
-        schedulerThread.join();
-
-        printHeader();
-        prompt();
+    // Print config if successfully loaded
+    if (!configManager.getConfig().empty()) {
+        configManager.printConfig();
     }
     else {
-        std::cout << "[i] The operating system has already been initialized." << std::endl;
+        std::cout << "[!] Using default configuration values" << std::endl;
+    }
+
+    if (!init) {
+        init = true;
+        std::cout << "[i] Starting scheduler..." << std::endl;
+        std::thread schedulerThread(&FCFSScheduler::runScheduler, &scheduler);
+        schedulerThread.detach();
+    }
+    else {
+        std::cout << "[i] Configuration reloaded" << std::endl;
     }
 }
 
@@ -72,7 +80,7 @@ void Shell::screen(std::vector<std::string> args)
         screenList();
         return;
     } // too many arguments given to screen.
-  
+
 
     else if (args[0] == "-s") { //SCREEN - S
         if (args.size() < 2) {
@@ -81,14 +89,14 @@ void Shell::screen(std::vector<std::string> args)
         }
         std::system("cls");
         std::string processName = args[1];
-        
+
         //simulated total lines
         int totalLines = 100;
         processManager.createProcess(processName, totalLines);
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
         scheduler.addProcess(ptr);
-        
+
 
         auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
         ConsoleManager::getInstance()->addConsole(processName, screen);
@@ -191,13 +199,12 @@ void Shell::reportUtil()
 
 void Shell::clear()
 {
-    std::cout << "[i] clear command recognized. Doing something." << std::endl;
-    #ifdef _WIN32
-        std::system("cls");
-    #else
-        std::system("clear");
-    #endif
-    
+#ifdef _WIN32
+    std::system("cls");
+#else
+    std::system("clear");
+#endif
+
     printHeader();
 }
 
@@ -223,7 +230,7 @@ void Shell::printHeader()
         << "\033[0m"; // Reset color
 }
 
-void Shell::splitString(std::string const &string, char const delim, std::vector<std::string> &tokens)
+void Shell::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
 {
     // push an empty string and return to avoid going through the splitting process if input is empty.
     if (string.empty()) {
@@ -258,10 +265,24 @@ void Shell::prompt()
     std::vector<std::string> input_tokens;
     splitString(input, delimiter, input_tokens);
 
+    // Handle initialize command
     if (input_tokens[0] == "initialize") {
         initialize();
-    } 
-    else if (input_tokens[0] == "screen") {
+        return;
+    }
+
+    // Block other commands if not initialized
+    if (!init) {
+        if (input_tokens[0] == "help" || input_tokens[0] == "exit") {
+            // Allow these commands
+        }
+        else {
+            std::cout << "[!] The system has not been initialized. Please run 'initialize' first." << std::endl;
+            return;
+        }
+    }
+
+    if (input_tokens[0] == "screen") {
         std::vector<std::string> sliced_input_tokens(input_tokens.begin() + 1, input_tokens.end());
         screen(sliced_input_tokens);
     }
@@ -284,8 +305,8 @@ void Shell::prompt()
         std::cout << "[*] Available commands:\n\n"
             << "  initialize\n"
             << "  screen\n"
-            << "    - screen -s\n"
-            << "    - screen -r\n"
+            << "    - screen -s <args>\n"
+            << "    - screen -r <args>\n"
             << "    - screen -ls\n"
             << "  scheduler-start\n"
             << "  scheduler-stop\n"
