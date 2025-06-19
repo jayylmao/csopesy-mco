@@ -20,7 +20,7 @@ add_executable(main main.cpp
         "PrintCommand.cpp"
         "ICommand.h"
         "ICommand.cpp"
-        "ConsoleManager.cpp"
-        "ConsoleManager.h"
+        "ConsoleManager.cpp" 
+        "ConsoleManager.h" 
 
 )
