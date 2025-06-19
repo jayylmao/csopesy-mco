@@ -22,5 +22,7 @@ add_executable(main main.cpp
         "ICommand.cpp"
         "ConsoleManager.cpp" 
         "ConsoleManager.h" 
+        "ConfigManager.h"
+        "ConfigManager.cpp"
 
 )
