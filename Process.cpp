@@ -19,6 +19,9 @@ void Process::executeInstruction()
 	std::lock_guard<std::mutex> lock(mtx);
 	if (remainingInstructions > 0) {
 		--remainingInstructions;
+		if (remainingInstructions == 0) {
+			finished = true;
+		}
 	}
 }
 

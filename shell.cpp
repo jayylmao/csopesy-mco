@@ -5,7 +5,7 @@ Shell::Shell(int cores) :
     quit(false),
     focusedPID(0),
     cores(cores),
-    scheduler(cores)
+    scheduler(cores,5)
 {
 }
 
@@ -60,8 +60,8 @@ void Shell::initialize() {
 
     if (!init) {
         init = true;
-        std::cout << "[i] Starting scheduler..." << std::endl;
-        std::thread schedulerThread(&FCFSScheduler::runScheduler, &scheduler);
+        std::cout << "[i] Starting scheduler..." << std::endl; //TODO:REMOVE
+        std::thread schedulerThread(&RoundRobinScheduler::runScheduler, &scheduler);
         schedulerThread.detach();
     }
     else {

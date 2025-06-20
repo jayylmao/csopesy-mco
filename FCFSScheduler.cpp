@@ -69,7 +69,6 @@ void FCFSScheduler::coreWorker(int coreId)
                 cmd.execute();
                 process->executeInstruction();
             }
-            process->setFinished(true);
         }
     }
 }

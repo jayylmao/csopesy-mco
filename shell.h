@@ -5,6 +5,7 @@
 #include "ConsoleManager.h"
 #include "ProcessManager.h"
 #include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
 #include "ConfigManager.h"
 
 #include <cstdlib>
@@ -128,7 +129,7 @@ private:
 
     int nextPID = 1;
 
-    FCFSScheduler scheduler;
+    RoundRobinScheduler scheduler;
     ProcessManager processManager;
     ConfigManager configManager;
 };
