@@ -8,7 +8,9 @@ Shell::Shell(int cores) :
     quit(false),
     focusedPID(0),
     cores(cores),
-    scheduler(nullptr)
+    scheduler(nullptr),
+    prevSchedulerType(""),
+    prevTimeQuantum(0)
 {
 }
 
@@ -115,33 +117,33 @@ void Shell::initialize() {
         // Handle invalid/missing scheduler configuration
         if (!validScheduler) {
             if (schedulerType.empty()) {
-                std::cerr << "[!] No scheduler type specified in config. Using Round Robin as default." << std::endl;
+                std::cerr << "[!] No scheduler type specified in config. Initialize failed." << std::endl;
             }
             else {
                 std::cerr << "[!] Invalid scheduler type '" << schedulerType
-                    << "' specified. Using Round Robin as default." << std::endl;
+                    << "' specified. Initialize failed." << std::endl;
             }
 
-            // Use Round Robin as fallback with default quantum
-            int quantum = 5;
-            scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
-            std::cout << "[i] Using Round Robin scheduler (quantum="
-                << quantum << ") as default" << std::endl;
+            // Initialize failed.
+            init = !init;
         }
 
         // Start the scheduler
-        std::thread schedulerThread([this]() {
-            if (scheduler) {
-                scheduler->runScheduler();
-            }
-            else {
-                std::cerr << "[!] Scheduler initialization failed!" << std::endl;
-            }
-            });
-        schedulerThread.detach();
+        if (init) {
+            std::thread schedulerThread([this]() {
+                if (scheduler) {
+                    scheduler->runScheduler();
+                }
+                else {
+                    std::cerr << "[!] Scheduler initialization failed!" << std::endl;
+                }
+                });
+            schedulerThread.detach();
+        }
+        
     }
     else {
-        std::cout << "[i] Configuration reloaded" << std::endl;
+        std::cout << "[i] Configuration reloaded." << std::endl;
     }
 }
 
@@ -332,7 +334,7 @@ void Shell::prompt()
     std::string input;
     constexpr char delimiter = ' '; // command arguments are separated by a space.
 
-    std::cout << "user ~ > " << std::flush;
+    std::cout << "\nuser ~ > " << std::flush;
     std::getline(std::cin, input);
 
     // don't perform string split when input is empty.
