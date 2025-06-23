@@ -1,6 +1,7 @@
 #pragma once
 #include "Process.h"
 #include "ICommand.h"
+#include "IScheduler.h"
 #include <vector>
 #include <queue>
 #include <thread>
@@ -8,12 +9,12 @@
 #include <condition_variable>
 #include <memory>
 
-class RoundRobinScheduler {
+class RoundRobinScheduler : public IScheduler {
 public:
     RoundRobinScheduler(int coreCount, int timeQuantum);
-    void addProcess(std::shared_ptr<Process> process);
-    void runScheduler();
-    void stopScheduler();
+    void addProcess(std::shared_ptr<Process> process) override;
+    void runScheduler() override;
+    void stopScheduler() override;
 
 private:
     int numCores;

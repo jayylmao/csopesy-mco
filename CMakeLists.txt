@@ -26,5 +26,5 @@ add_executable(main main.cpp
         "RoundRobinScheduler.cpp"
         "ScreenCommands.h"
         "ScreenCommands.cpp"
-        
- "IScheduler.h")
+        "IScheduler.h"
+)

@@ -7,6 +7,7 @@
 #include "FCFSScheduler.h"
 #include "RoundRobinScheduler.h"
 #include "ConfigManager.h"
+#include "IScheduler.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -128,8 +129,7 @@ private:
     int cores;
 
     int nextPID = 1;
-
-    RoundRobinScheduler scheduler;
+    std::unique_ptr<IScheduler> scheduler;
     ProcessManager processManager;
     ConfigManager configManager;
 };

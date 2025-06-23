@@ -1,11 +1,14 @@
 #include "shell.h"
+#include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
+
 
 Shell::Shell(int cores) :
     init(false),
     quit(false),
     focusedPID(0),
     cores(cores),
-    scheduler(cores,5)
+    scheduler(nullptr)
 {
 }
 
@@ -55,13 +58,86 @@ void Shell::initialize() {
         configManager.printConfig();
     }
     else {
-        std::cout << "[!] Using default configuration values" << std::endl;
+        std::cout << "[!] Config unable to be read. Check if file exists or is in out>build>x64-debug" << std::endl;
     }
 
     if (!init) {
         init = true;
-        std::cout << "[i] Starting scheduler..." << std::endl; //TODO:REMOVE
-        std::thread schedulerThread(&RoundRobinScheduler::runScheduler, &scheduler);
+
+        // Create scheduler based on config
+        const auto& config = configManager.getConfig();
+        std::string schedulerType;
+        bool validScheduler = false;
+
+        // Check if scheduler type is specified in config
+        if (config.find("scheduler") != config.end()) {
+            schedulerType = config.at("scheduler");
+
+
+            if (schedulerType == "fcfs" || schedulerType == "FCFS") {
+                std::cout << "[i] Using FCFS scheduler" << std::endl;
+                scheduler = std::make_unique<FCFSScheduler>(cores);
+                validScheduler = true;
+            }
+            else if (schedulerType == "rr" || schedulerType == "RR") {
+                int quantum = 5; // Default time quantum
+                bool validQuantum = true;
+
+                // Check for time quantum configuration
+                if (config.find("time_quantum") != config.end()) {
+                    try {
+                        quantum = std::stoi(config.at("time_quantum"));
+                        if (quantum <= 0) {
+                            std::cerr << "[!] Invalid time_quantum value ("
+                                << quantum << "). Must be positive integer. Using default (5)" << std::endl;
+                            validQuantum = false;
+                        }
+                    }
+                    catch (...) {
+                        std::cerr << "[!] Invalid time_quantum value. Using default (5)" << std::endl;
+                        validQuantum = false;
+                    }
+                }
+
+                if (validQuantum) {
+                    std::cout << "[i] Using Round Robin scheduler (quantum="
+                        << quantum << ")" << std::endl;
+                }
+                else {
+                    std::cout << "[i] Using Round Robin scheduler with default quantum (5)" << std::endl;
+                }
+
+                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
+                validScheduler = true;
+            }
+        }
+
+        // Handle invalid/missing scheduler configuration
+        if (!validScheduler) {
+            if (schedulerType.empty()) {
+                std::cerr << "[!] No scheduler type specified in config. Using Round Robin as default." << std::endl;
+            }
+            else {
+                std::cerr << "[!] Invalid scheduler type '" << schedulerType
+                    << "' specified. Using Round Robin as default." << std::endl;
+            }
+
+            // Use Round Robin as fallback with default quantum
+            int quantum = 5;
+            scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
+            std::cout << "[i] Using Round Robin scheduler (quantum="
+                << quantum << ") as default" << std::endl;
+        }
+
+        // Start the scheduler
+        std::thread schedulerThread([this]() {
+            if (scheduler) {
+                scheduler->runScheduler();
+            }
+            else {
+                std::cerr << "[!] Scheduler initialization failed!" << std::endl;
+            }
+            });
         schedulerThread.detach();
     }
     else {
@@ -81,7 +157,6 @@ void Shell::screen(std::vector<std::string> args)
         return;
     } // too many arguments given to screen.
 
-
     else if (args[0] == "-s") { //SCREEN - S
         if (args.size() < 2) {
             std::cout << "[*] You must provide a process name. Usage: screen -s <processname>" << std::endl;
@@ -95,8 +170,15 @@ void Shell::screen(std::vector<std::string> args)
         processManager.createProcess(processName, totalLines);
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
-        scheduler.addProcess(ptr);
 
+        // Use the scheduler interface instead of concrete class
+        if (scheduler) {
+            scheduler->addProcess(ptr);
+        }
+        else {
+            std::cerr << "[!] Scheduler not initialized! Run 'initialize' first." << std::endl;
+            return;
+        }
 
         auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
         ConsoleManager::getInstance()->addConsole(processName, screen);
@@ -104,9 +186,7 @@ void Shell::screen(std::vector<std::string> args)
         //clear();
         std::system("cls");
         printHeader();
-
     }
-
 
     else if (args[0] == "-r") { // SCREEN -R
         if (args.size() < 2) {
@@ -128,7 +208,6 @@ void Shell::screen(std::vector<std::string> args)
         }
         return;
     }
-
 
     else if (args.size() > 2) {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;

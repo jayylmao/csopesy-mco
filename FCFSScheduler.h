@@ -1,6 +1,6 @@
 #pragma once
-
 #include "Process.h"
+#include "IScheduler.h"
 #include <queue>
 #include <vector>
 #include <mutex>
@@ -13,7 +13,7 @@
  * @class FCFSScheduler
  * @brief Implements a multi-threaded First-Come-First-Serve process scheduler.
  */
-class FCFSScheduler {
+class FCFSScheduler : public IScheduler {
 public:
     FCFSScheduler(int cores);
     ~FCFSScheduler();
@@ -21,13 +21,19 @@ public:
     /**
      * @brief Start the scheduler loop. Should be called once.
      */
-    void runScheduler();
+    void runScheduler() override;
 
     /**
      * @brief Add a new process to the ready queue.
      * @param process Shared pointer to the process.
      */
-    void addProcess(std::shared_ptr<Process> process);
+    void addProcess(std::shared_ptr<Process> process) override;
+
+
+    /*
+    * @brief Stops the scheduler.
+    */
+    void stopScheduler() override;
 
 private:
     int numCores;

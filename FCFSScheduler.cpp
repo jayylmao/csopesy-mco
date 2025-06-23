@@ -21,7 +21,16 @@ FCFSScheduler::~FCFSScheduler()
         }
     }
 }
+void FCFSScheduler::stopScheduler() {
+    stop = true;
+    cv.notify_all();
 
+    for (auto& t : coreThreads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
 void FCFSScheduler::runScheduler()
 {
     for (int i = 0; i < numCores; ++i) {
