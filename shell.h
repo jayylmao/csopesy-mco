@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <atomic>
 
 /**
  * @class Shell
@@ -23,7 +24,7 @@
 class Shell {
 public:
     Shell(int cores);
-
+    ~Shell();
     /**
      * @brief Print header and initialize operating system.
      */
@@ -127,9 +128,13 @@ private:
     bool quit; // Check if user requests operating system to shut down.
     int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;
-
     int nextPID = 1;
     std::unique_ptr<IScheduler> scheduler;
+    // Added for batch processing
+    std::atomic<bool> batchProcessActive;  // Flag to control batch process generation
+    std::thread batchThread;               // Thread for generating batch processes
+    int batchFreq;                         // Frequency of batch process generation (CPU cycles)
+
     ProcessManager processManager;
     ConfigManager configManager;
 };

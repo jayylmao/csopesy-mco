@@ -2,6 +2,7 @@
 #include "FCFSScheduler.h"
 #include "RoundRobinScheduler.h"
 
+#include <chrono>
 
 Shell::Shell(int cores) :
     init(false),
@@ -9,9 +10,13 @@ Shell::Shell(int cores) :
     focusedPID(0),
     cores(cores),
     scheduler(nullptr),
-    prevSchedulerType(""),
-    prevTimeQuantum(0)
+    batchProcessActive(false),  // Initialize batch processing as inactive
+    batchFreq(1)                // Default frequency: 1 CPU cycle
 {
+}
+
+Shell::~Shell() {
+    schedulerStop();  // Ensure batch thread stops on exit
 }
 
 bool Shell::getQuit() const
@@ -63,11 +68,27 @@ void Shell::initialize() {
         std::cout << "[!] Config unable to be read. Check if file exists or is in out>build>x64-debug" << std::endl;
     }
 
+    // Read and validate num-cores
+    const auto& config = configManager.getConfig();
+    if (config.find("num-cores") != config.end()) {
+        try {
+            cores = std::stoi(config.at("num-cores"));
+            if (cores < 1 || cores > 16) {
+                std::cerr << "[!] Invalid num-cores value ("
+                    << cores << "). Must be between 1-16. Using default (4)." << std::endl;
+                cores = 4;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid num-cores value. Using default (4)." << std::endl;
+            cores = 4;
+        }
+    }
+
     if (!init) {
         init = true;
 
         // Create scheduler based on config
-        const auto& config = configManager.getConfig();
         std::string schedulerType;
         bool validScheduler = false;
 
@@ -77,7 +98,7 @@ void Shell::initialize() {
 
 
             if (schedulerType == "fcfs" || schedulerType == "FCFS") {
-                std::cout << "[i] Using FCFS scheduler" << std::endl;
+                std::cout << "[i] Using FCFS scheduler with " << cores << " cores" << std::endl;
                 scheduler = std::make_unique<FCFSScheduler>(cores);
                 validScheduler = true;
             }
@@ -102,11 +123,12 @@ void Shell::initialize() {
                 }
 
                 if (validQuantum) {
-                    std::cout << "[i] Using Round Robin scheduler (quantum="
-                        << quantum << ")" << std::endl;
+                    std::cout << "[i] Using Round Robin scheduler with " << cores
+                        << " cores (quantum=" << quantum << ")" << std::endl;
                 }
                 else {
-                    std::cout << "[i] Using Round Robin scheduler with default quantum (5)" << std::endl;
+                    std::cout << "[i] Using Round Robin scheduler with " << cores
+                        << " cores and default quantum (5)" << std::endl;
                 }
 
                 scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
@@ -128,6 +150,22 @@ void Shell::initialize() {
             init = !init;
         }
 
+        // Load batch-process-freq from config with validation
+        if (config.find("batch-process-freq") != config.end()) {
+            try {
+                batchFreq = std::stoi(config.at("batch-process-freq"));
+                if (batchFreq < 1 || batchFreq > 232) {
+                    std::cerr << "[!] Invalid batch-process-freq value ("
+                        << batchFreq << "). Must be between 1-232. Using default (1)." << std::endl;
+                    batchFreq = 1;
+                }
+            }
+            catch (...) {
+                std::cerr << "[!] Invalid batch-process-freq value. Using default (1)." << std::endl;
+                batchFreq = 1;
+            }
+        }
+
         // Start the scheduler
         if (init) {
             std::thread schedulerThread([this]() {
@@ -140,7 +178,7 @@ void Shell::initialize() {
                 });
             schedulerThread.detach();
         }
-        
+
     }
     else {
         std::cout << "[i] Configuration reloaded." << std::endl;
@@ -263,14 +301,62 @@ void Shell::screenList()
     std::cout << "--------------------" << std::endl;
 }
 
+// shell.cpp - Modified schedulerStart() function
 void Shell::schedulerStart()
 {
-    std::cout << "[i] scheduler-start command recognized. Doing something." << std::endl;
+    if (!init) {
+        std::cout << "[!] The system has not been initialized. Please run 'initialize' first." << std::endl;
+        return;
+    }
+
+    if (batchProcessActive) {
+        std::cout << "[i] Batch processing is already active." << std::endl;
+        return;
+    }
+
+    // Start batch processing
+    batchProcessActive = true;
+    batchThread = std::thread([this]() {
+        int counter = 0;
+        while (batchProcessActive) {
+            // Create new batch process
+            std::string name = "batch_" + std::to_string(counter++);
+            int totalLines = 100; // Default instruction count
+
+            processManager.createProcess(name, totalLines);
+            std::shared_ptr<Process> proc = processManager.getSharedProcess(processManager.getNextPID() - 1);
+
+            if (scheduler) {
+                scheduler->addProcess(proc);
+                // Removed notification to prevent CLI flooding
+            }
+
+            // CORRECTED: Generate batchFreq processes per CPU cycle
+            // Each instruction = 100ms, so time between processes = 100ms / batchFreq
+            int sleep_time = 100 / batchFreq;
+            if (sleep_time <= 0) sleep_time = 1; // Ensure minimum sleep time
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        }
+        });
+
+    std::cout << "[i] Batch processing started (frequency: "
+        << batchFreq << " processes per CPU cycle)" << std::endl;
 }
 
 void Shell::schedulerStop()
 {
-    std::cout << "[i] scheduler-stop command recognized. Doing something." << std::endl;
+    if (!batchProcessActive) {
+        std::cout << "[i] Batch processing is not currently active." << std::endl;
+        return;
+    }
+
+    // Stop batch processing
+    batchProcessActive = false;
+    if (batchThread.joinable()) {
+        batchThread.join();
+    }
+    std::cout << "[i] Batch processing stopped." << std::endl;
 }
 
 void Shell::reportUtil()
@@ -389,8 +475,8 @@ void Shell::prompt()
             << "    - screen -s <args>\n"
             << "    - screen -r <args>\n"
             << "    - screen -ls\n"
-            << "  scheduler-start\n"
-            << "  scheduler-stop\n"
+            << "  scheduler-start  Start generating batch processes\n"  // Updated help text
+            << "  scheduler-stop   Stop generating batch processes\n"   // Updated help text
             << "  report-util\n"
             << "  clear\n"
             << "  exit\n" << std::endl;

@@ -6,8 +6,11 @@
 #include <string> 
 
 FCFSScheduler::FCFSScheduler(int cores)
-    : numCores(cores), stop(false)
+    : stop(false)
 {
+    // Ensure valid core count
+    if (cores < 1) cores = 1;
+    numCores = cores;
 }
 
 FCFSScheduler::~FCFSScheduler()
