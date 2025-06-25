@@ -269,37 +269,61 @@ void Shell::screen(std::vector<std::string> args)
 
 void Shell::screenList()
 {
+    outputProcessList(std::cout);
+}
+
+void Shell::outputProcessList(std::ostream& out)
+{
     std::vector<Process*> processes = processManager.listProcesses();
 
+    int totalCores = cores;
+    int usedCores = 0;
+
+    // Count used cores
+    for (const auto& proc : processes) {
+        if (!proc->hasFinished() && proc->getCoreId() != -1) {
+            usedCores++;
+        }
+    }
+
+    int availableCores = totalCores - usedCores;
+    if (availableCores < 0) availableCores = 0;
+
+    double utilization = (static_cast<double>(usedCores) / totalCores) * 100.0;
+
+    out << "Core utilization: " << static_cast<int>(utilization) << "%" << std::endl;
+    out << "Cores used: " << usedCores << std::endl;
+    out << "Cores available: " << availableCores << std::endl;
+    out << "--------------------" << std::endl;
+
     if (processes.empty()) {
-        std::cout << "[!] No processes are running." << std::endl;
+        out << "[!] No processes are running." << std::endl;
         return;
     }
 
-    std::cout << "--------------------" << std::endl
-        << "Running processes" << std::endl;
+    out << "Running processes" << std::endl;
     for (const auto& proc : processes) {
         if (!(proc->hasFinished())) {
             std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
-            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
+            out << proc->getName() << "\t(" << proc->getCreationTimestamp()
                 << ")\tCore: " << coreDisplay << "\t" << proc->getCurrentLine() << "/" << proc->getTotalLines()
                 << std::endl;
         }
     }
 
-
-    std::cout << "--------------------" << std::endl
+    out << "--------------------" << std::endl
         << "Finished processes" << std::endl;
     for (const auto& proc : processes) {
         if (proc->hasFinished()) {
             std::string coreDisplay = (proc->getCoreId() == -1) ? "N/A" : std::to_string(proc->getCoreId());
-            std::cout << proc->getName() << "\t(" << proc->getCreationTimestamp()
+            out << proc->getName() << "\t(" << proc->getCreationTimestamp()
                 << ")\tFinished " << proc->getCurrentLine() << "/" << proc->getTotalLines()
                 << std::endl;
         }
     }
-    std::cout << "--------------------" << std::endl;
+    out << "--------------------" << std::endl;
 }
+
 
 // shell.cpp - Modified schedulerStart() function
 void Shell::schedulerStart()
@@ -359,9 +383,35 @@ void Shell::schedulerStop()
     std::cout << "[i] Batch processing stopped." << std::endl;
 }
 
+
+
 void Shell::reportUtil()
 {
-    std::cout << "[i] report-util command recognized. Doing something." << std::endl;
+    std::ofstream outFile("csopesy-log.txt");
+    if (!outFile) {
+        std::cerr << "[!] Failed to open csopesy-log.txt for writing." << std::endl;
+        return;
+    }
+    outFile 
+        << " _______ ___  ___  ___ ___ __ __\n"
+        "/ __(_-</ _ \\/ _ \\/ -_|_-</ // /\n"
+        "\\__/___/\\___/ .__/\\__/___/\\_, / \n"
+        "           /_/           /___/  \n";
+
+    outFile << "Welcome to the CSOPESY Emulator!\n\n"
+        "Developers: \nCarlos, Jay Michael \n"
+        "Diego, Karl Nico \n"
+        "Reyes, Janica Megan \n"
+        "Santos, Emmanuel Gabriel\n\n";
+
+    auto now = std::chrono::system_clock::now();
+    std::time_t raw_time = std::chrono::system_clock::to_time_t(now);
+
+    outFile << "Last updated: "
+        << std::put_time(std::localtime(&raw_time), "%m/%d/%Y %I:%M:%S %p");
+
+    outputProcessList(outFile);
+    std::cout << "Report generated." << std::endl;
 }
 
 void Shell::clear()

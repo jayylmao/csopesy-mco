@@ -17,6 +17,9 @@
 #include <thread>
 #include <atomic>
 
+#include <fstream>
+#include <algorithm>
+
 /**
  * @class Shell
  * @brief Defines shell functionality such as initialization and user prompt.
@@ -40,6 +43,11 @@ public:
      * @brief List all running processes.
      */
     void screenList();
+    
+    /**
+     * @brief prints all processes.
+     */
+    void outputProcessList(std::ostream& out);
 
     /**
      * @brief Continuously create new process instances until the user calls the stop command.
