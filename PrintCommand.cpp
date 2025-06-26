@@ -5,44 +5,46 @@
 #include <iomanip>
 #include <sstream>
 #include <thread>
-#include <ofstream>
+#include <fstream>
+
+#include <filesystem> // for checking file existence
 
 /**
  * @brief Instantiate a print command with a specified message.
  */
-PrintCommand::PrintCommand(std::string& msg)
+PrintCommand::PrintCommand(const std::string& msg, int coreId, const std::string& procName, int pid)
+    : ICommand(pid, ICommand::PRINT), // You must pass something here
+    message(msg), coreId(coreId), procName(procName)
 {
-	this->message = msg;
 }
 
 /**
  * @brief Print a message to a text file.
  */
-PrintCommand::execute()
-{
-	//std::ofstream file;
-	//std::string procName;
-	//file.open(procName + ".txt");
+void PrintCommand::execute() {
+    ICommand::execute();
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime = *std::localtime(&currentTime);
 
-	std::string procName = getCurrentProcessName();
-	int coreId = getCurrentCoreID();
+    std::ostringstream timeStream;
+    timeStream << "("
+        << std::put_time(&localTime, "%m/%d/%Y %I:%M:%S%p")
+        << ") Core:" << coreId
+        << " \"" << message << "\"";
 
-	// Get current time
-	auto now = std::chrono::system_clock::now();
-	std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-	std::tm localTime = *std::localtime(&currentTime);
+    // Check if the file already exists
+    bool fileExists = std::filesystem::exists(procName + ".txt");
 
-	// Format timestamp: (MM/DD/YYYY HH:MM:SSAM/PM)
-	std::ostringstream timeStream;
-	timeStream << "("
-		<< std::put_time(&localTime, "%m/%d/%Y %I:%M:%S%p")
-		<< ") Core:" << coreId
-		<< " \"" << message << "\"";
-
-	// Open the process's log file in append mode
-	std::ofstream file(procName + ".txt", std::ios::app);
-	if (file.is_open()) {
-		file << timeStream.str() << std::endl;
-		file.close();
-	}
+    std::ofstream file(procName + ".txt", std::ios::app);
+    if (file.is_open()) {
+        if (!fileExists) {
+            file << "Process Name: " << procName << "\nLogs:\n" << std::endl;
+        }
+        file << timeStream.str() << std::endl;
+        file.close();
+    }
+    else {
+        std::cerr << "[ERROR] Failed to open file: " << procName << ".txt" << std::endl;
+    }
 }

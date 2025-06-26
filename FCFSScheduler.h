@@ -1,33 +1,53 @@
 #pragma once
 #include "Process.h"
+#include "IScheduler.h"
+#include <queue>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
 #include <thread>
+#include <atomic>
+#include <memory>
 
 /**
  * @class FCFSScheduler
- * @brief Process scheduler that follows first-come-first-serve.
+ * @brief Implements a multi-threaded First-Come-First-Serve process scheduler.
  */
-class FCFSScheduler {
+class FCFSScheduler : public IScheduler {
 public:
-	/**
-	 * @brief Instantiate scheduler with given number of cores.
-	 * @param cores Number of cores for scheduler to use.
-	 */
-	FCFSScheduler(int cores) : numCores(cores), processQueues(cores) {}
+    FCFSScheduler(int cores);
+    ~FCFSScheduler();
 
-	/**
-	 * @brief Add a process to the queue.
-	 * @param process Pointer to a process to add to the queue.
-	 * @param core Core index to run process on.
-	 */
-	void addProcess(std::shared_ptr<Process> process, int core = 0);
+    /**
+     * @brief Start the scheduler loop. Should be called once.
+     */
+    void runScheduler() override;
 
-	/**
-	 * @brief Run the scheduler.
-	 */
-	void runScheduler();
+    /**
+     * @brief Add a new process to the ready queue.
+     * @param process Shared pointer to the process.
+     */
+    void addProcess(std::shared_ptr<Process> process) override;
+
+
+    /*
+    * @brief Stops the scheduler.
+    */
+    void stopScheduler() override;
 
 private:
-	int numCores;
-	std::vector<std::vector<std::shared_ptr<Process>>> processQueues; // Store process queues per core.
+    int numCores;
+    std::vector<std::thread> coreThreads;
 
+    std::queue<std::shared_ptr<Process>> readyQueue;
+    std::mutex queueMutex;
+    std::condition_variable cv;
+
+    std::atomic<bool> stop;
+
+    /**
+     * @brief Worker thread loop for each CPU core.
+     * @param coreId ID of the current core.
+     */
+    void coreWorker(int coreId);
 };

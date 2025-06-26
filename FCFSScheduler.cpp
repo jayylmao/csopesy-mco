@@ -1,32 +1,86 @@
 #include "FCFSScheduler.h"
+#include "PrintCommand.h"
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <string> 
 
-void FCFSScheduler::addProcess(std::shared_ptr<Process> process, int core)
+FCFSScheduler::FCFSScheduler(int cores)
+    : stop(false)
 {
-	if (core >= 0 && core < numCores) {
-		processQueues[core].push_back(process);
-	}
-	else {
-		std::cerr << "[!] Invalid core selected." << std::endl;
-	}
+    // Ensure valid core count
+    if (cores < 1) cores = 1;
+    numCores = cores;
 }
 
+FCFSScheduler::~FCFSScheduler()
+{
+    stop = true;
+    cv.notify_all();
+
+    for (auto& t : coreThreads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
+void FCFSScheduler::stopScheduler() {
+    stop = true;
+    cv.notify_all();
+
+    for (auto& t : coreThreads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
 void FCFSScheduler::runScheduler()
 {
-	// while the first queue isn't empty, iterate through each queue
-	while (!processQueues[0].empty()) {
-		for (int core = 0; core < numCores; core++) {
-			// if the queue isn't empty, execute the first process in the queue.
-			if (!processQueues[core].empty()) {
-				std::shared_ptr<Process> currProcess = processQueues[core].back();
-				processQueues[core].pop_back();
+    for (int i = 0; i < numCores; ++i) {
+        coreThreads.emplace_back(&FCFSScheduler::coreWorker, this, i);
+    }
+}
 
-				// while the process hasn't finished, execute all instructions.
-				while (!currProcess->hasFinished()) {
-					currProcess->executeInstruction();
-				}
+void FCFSScheduler::addProcess(std::shared_ptr<Process> process)
+{
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        readyQueue.push(process);
+    }
+    cv.notify_one();
+}
 
-				std::cout << "Process " << currProcess->getPID() << " has completed on core" << core + 1 << "." << std::endl;
-			}
-		}
-	}
+void FCFSScheduler::coreWorker(int coreId)
+{
+    while (!stop) {
+        std::shared_ptr<Process> process;
+
+        {
+            std::unique_lock<std::mutex> lock(queueMutex);
+            cv.wait(lock, [this]() { return stop || !readyQueue.empty(); });
+
+            if (stop) break;
+            if (!readyQueue.empty()) {
+                process = readyQueue.front();
+                readyQueue.pop();
+            }
+        }
+
+        if (process) {
+            process->setCoreId(coreId);
+            int pid = process->getPID();
+
+            for (int i = 0; i < process->getTotalLines(); ++i) {
+                // Simulate work
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                // Log using PrintCommand
+                std::string logMsg = "[" + std::to_string(i + 1) + "] Hello world from " + process->getName();
+                // std::string logMsg = "[Line " + std::to_string(i + 1) + "] PID: " + std::to_string(pid);
+                PrintCommand cmd(logMsg, coreId, process->getName(), pid); // pass pid
+                cmd.execute();
+                process->executeInstruction();
+            }
+        }
+    }
 }

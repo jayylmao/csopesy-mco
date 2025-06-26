@@ -5,6 +5,9 @@
 #include "ConsoleManager.h"
 #include "ProcessManager.h"
 #include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
+#include "ConfigManager.h"
+#include "IScheduler.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -12,6 +15,10 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <atomic>
+
+#include <fstream>
+#include <algorithm>
 
 /**
  * @class Shell
@@ -20,7 +27,7 @@
 class Shell {
 public:
     Shell(int cores);
-
+    ~Shell();
     /**
      * @brief Print header and initialize operating system.
      */
@@ -36,6 +43,11 @@ public:
      * @brief List all running processes.
      */
     void screenList();
+    
+    /**
+     * @brief prints all processes.
+     */
+    void outputProcessList(std::ostream& out);
 
     /**
      * @brief Continuously create new process instances until the user calls the stop command.
@@ -58,7 +70,7 @@ public:
      * @param delim Split string on delimiter character.
      * @param &tokens Reference to token vector to push tokens to.
      */
-    static void splitString(std::string const &string, char const delim, std::vector<std::string> &tokens);
+    static void splitString(std::string const& string, char const delim, std::vector<std::string>& tokens);
 
     /**
      * @brief Display prompt, ask user for input, and call other methods to handle command.
@@ -122,12 +134,15 @@ public:
 private:
     bool init; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
-	int focusedPID; // ID of focused process. The OS main menu is 0.
+    int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;
-
     int nextPID = 1;
+    std::unique_ptr<IScheduler> scheduler;
+    // Added for batch processing
+    std::atomic<bool> batchProcessActive;  // Flag to control batch process generation
+    std::thread batchThread;               // Thread for generating batch processes
+    int batchFreq;                         // Frequency of batch process generation (CPU cycles)
 
-    FCFSScheduler scheduler;
-    ConsoleManager consoleManager;
     ProcessManager processManager;
+    ConfigManager configManager;
 };

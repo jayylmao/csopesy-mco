@@ -2,7 +2,7 @@
 #include "ICommand.h"
 #include <string>
 #include <iostream>
-#include <ofstream>
+#include <fstream>
 
 /**
  * @class PrintCommand
@@ -13,7 +13,8 @@ public:
 	/**
 	 * @brief Create a command to print a message.
 	 */
-	PrintCommand(std::string& msg);
+	PrintCommand(const std::string& msg, int coreId, const std::string& procName, int pid);
+
 
 	/**
 	 * @brief Execute the command. Temporary: print to a text file.
@@ -22,5 +23,6 @@ public:
 
 private:
 	std::string message;
-
+	int coreId;              
+	std::string procName;    
 };

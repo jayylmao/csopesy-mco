@@ -8,6 +8,10 @@
 #include <stdexcept>
 #include <chrono>
 
+#include <mutex>
+#include <iomanip>  // for std::put_time
+#include <sstream>  // for std::ostringstream
+
 /**
  * @class Process
  * @brief Represents a process running on the operating system.
@@ -57,6 +61,15 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
+
+	void setFinished(bool value);
+
+	void setCoreId(int id);
+	int getCoreId() const;
+
+	int getTotalLines() const;
+
+
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
@@ -64,4 +77,9 @@ private:
 	int remainingInstructions; // number of instructions left to execute.
 
 	std::string creationTimestamp;
+
+	int coreId;
+	bool finished;
+
+	mutable std::mutex mtx; // protects coreId and finished
 };

@@ -8,7 +8,8 @@
 /dataSources.local.xml
 #Build folder
 /build
-/out
+/out/*
+!out/build/x64-Debug/config.txt
 /.vs
 /.vscode
 
