@@ -250,7 +250,7 @@ void Marquee::refreshDisplay()
 		setCursorPos(0, currLine);
 		std::cout << "********************************" << std::endl
 			<< "* Displaying a marquee console *" << std::endl
-			<< "********************************" << std::endl;
+			<< "********************************" << "width: " << getWidth() << "height: " << getHeight() << std::endl;
 
 		moveMarquee();
 		setCursorPos(getXPos(), getYPos() + DISPLAY_OFFSET);

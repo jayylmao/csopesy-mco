@@ -1,6 +1,11 @@
 #pragma once
 #include "ICommand.h"
 #include "PrintCommand.h"
+#include "DeclareCommand.h"
+#include "AddCommand.h"
+#include "SubtractCommand.h"
+#include "SleepCommand.h"
+#include "ForCommand.h"
 
 #include <string>
 #include <vector>
@@ -15,6 +20,13 @@
 #include <sstream>  // for std::ostringstream
 #include <cstdint>
 
+
+#include <cstdlib>  // for rand()
+#include <ctime>    // for seeding rand() if needed
+#include <iterator> // for std::advance
+#include <random>
+#include <cstdint>
+
 /**
  * @class Process
  * @brief Represents a process running on the operating system.
@@ -24,7 +36,7 @@ public:
 	Process(const std::string& name, int pid, int instructionCount);
 	
 	std::queue<std::shared_ptr<ICommand>> instructionQueue;
-	std::vector<std::string> printOutput;
+	std::vector<std::string> logs;
 	
 	void createInstructions();
 
@@ -63,13 +75,21 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
-	std::shared_ptr<ICommand> createCommand(ICommand::Type type);
+	std::shared_ptr<ICommand> createCommand(int type);
 
 	/**
-	 * @brief Declare a variable.
+	 * @brief Get a variable from the symbol table.
+	 * @param name Name of the variable.
+	 * @return Value of variable.
 	 */
-	//void declareVar(DeclareCommand cmd);
+	uint16_t getVar(std::string name);
 
+	/**
+	 * @brief Create a variable and store it in the symbol table.
+	 * @param name Name of the variable.
+	 * @param val Value of the variable.
+	 */
+	void setVar(std::string name, uint16_t val);
 
 	void setFinished(bool value);
 
@@ -82,14 +102,13 @@ private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
 	int totalInstructions; // number of instructions contained in process to execute.
-	//int remainingInstructions; // number of instructions left to execute.
 
 	std::string creationTimestamp;
 
 	int coreId; // core that the process is running on.
 	bool finished; // flag that tracks whether the process has finished execution.
 
-	std::unordered_map<std::string, uint16_t> symbolTable; // maps variable names to their values.
+	std::unordered_map<std::string, uint16_t> symbolTable; // maps variable names to their value
 
 	mutable std::mutex mtx; // protects coreId and finished
 };

@@ -41,6 +41,30 @@ void ScreenS::display() {
         std::cout << "---------------------------\n";
     }
 }
+//NEW ONE
+void ScreenS::processSMI() {
+	if (processManager) {
+		try {
+			Process& process = processManager->getProcess(processID);
+			std::cout << "\nProcess Name: " << process.getName() << "\n";
+			std::cout << "PID: " << process.getPID() << "\n";
+			std::cout << "Logs:\n";
+			for (const auto& log : process.logs) {
+				std::cout << log << "\n";
+			}
+			std::cout << "\nCurrent instruction line: " << process.getCurrentLine() << "\n";
+			std::cout << "Lines of code: " << process.getTotalLines() << "\n";
+			if (process.hasFinished()) {
+				std::cout << "\nFinished!\n";
+			}
+		}
+		catch (...) {
+			std::cout << "[!] Could not fetch process state.\n";
+		}
+	}
+	std::cout << "---------------------\n";
+}
+//TILL HERE
 
 void ScreenS::process() {
     std::string input;
@@ -51,11 +75,17 @@ void ScreenS::process() {
         std::cout << "\nroot:\\> ";
         std::getline(std::cin, input);
 
-        if (input == "exit") {
+        if (input == "exit") 
+        {
             std::cout << "[*] Exiting process '" << name << "'...\n";
             break;
         }
-        else {
+        else if(input == "process-smi") 
+        {
+			processSMI();
+        }
+        else 
+        {
             continue; 
         }
     }

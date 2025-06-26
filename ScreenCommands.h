@@ -12,10 +12,9 @@ public:
     void onEnabled() override;
     void display() override;
     void process() override;
+	void processSMI();//process SMI
 
     int getProcessID() const { return processID; }
-   // int getCurrentLine() const { return currentLine; } was for simulation
-    //int getTotalLineCount() const { return totalLineCount; }
     std::string getCreationTimestamp() const { return creationTimestamp; }
 
 private:

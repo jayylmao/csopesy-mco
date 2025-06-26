@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "AConsole.h"
 #include "ScreenCommands.h"
+#include "Marquee.h"
 
 #include <chrono>
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <random>
 
 Shell::Shell(int cores) :
     init(false),
@@ -74,8 +76,22 @@ void Shell::initialize() {
         std::cout << "[!] Config unable to be read. Check if file exists or is in out>build>x64-debug" << std::endl;
     }
 
-    // Read and validate num-cores
+    
     const auto& config = configManager.getConfig();
+    // Sets minIns and Max Ins
+	if (config.find("min-ins") != config.end()) 
+    {
+		minIns = std::stoi(config.at("min-ins"));
+	}
+	if (config.find("max-ins") != config.end()) 
+    {
+		maxIns = std::stoi(config.at("max-ins"));
+	}
+    // Swaps if min greater than max
+	if (minIns > maxIns) std::swap(minIns, maxIns); 
+
+
+	// Read and validate num-cores
     if (config.find("num-cores") != config.end()) {
         try {
             cores = std::stoi(config.at("num-cores"));
@@ -212,8 +228,7 @@ void Shell::screen(std::vector<std::string> args)
         std::string processName = args[1];
 
         //simulated total lines
-        int totalLines = 100;
-        processManager.createProcess(processName, totalLines);
+        processManager.createProcess(processName, randomNumber());
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
 
@@ -376,9 +391,14 @@ void Shell::marquee()
     Shell::clear();
 }
 
-void Shell::schedulerTest()
+int Shell::randomNumber()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(minIns, maxIns);
+    return dist(gen);
+}
 
-// shell.cpp - Modified schedulerStart() function
 void Shell::schedulerStart()
 {
     if (!init) {
@@ -394,11 +414,14 @@ void Shell::schedulerStart()
     // Start batch processing
     batchProcessActive = true;
     batchThread = std::thread([this]() {
+
+		
+
         int counter = 0;
         while (batchProcessActive) {
             // Create new batch process
             std::string name = "batch_" + std::to_string(counter++);
-            int totalLines = 100; // Default instruction count
+            int totalLines = randomNumber(); //random per process
 
             processManager.createProcess(name, totalLines);
             std::shared_ptr<Process> proc = processManager.getSharedProcess(processManager.getNextPID() - 1);
@@ -464,7 +487,7 @@ void Shell::reportUtil()
         << std::put_time(std::localtime(&raw_time), "%m/%d/%Y %I:%M:%S %p");
 
     outputProcessList(outFile);
-    std::cout << "Report generated." << std::endl;
+    std::cout << "[i] Report generated." << std::endl;
 }
 
 void Shell::clear()

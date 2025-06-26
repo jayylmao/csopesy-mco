@@ -8,16 +8,23 @@ add_executable(main main.cpp
         shell.h 
         "AConsole.h" 
         "AConsole.cpp"
+        "AddCommand.h"
+        "AddCommand.cpp"
         "ConfigManager.h"
         "ConfigManager.cpp"
         "ConsoleManager.cpp" 
         "ConsoleManager.h" 
+        "DeclareCommand.cpp"
+        "DeclareCommand.h"
         "FCFSScheduler.h"
         "FCFSScheduler.cpp"
         "ICommand.h"
         "ICommand.cpp"
-        
-        
+        "IScheduler.h"
+        "Marquee.h"
+        "Marquee.cpp"
+        "PrintCommand.cpp"
+        "PrintCommand.h"
         "Process.h"
         "Process.cpp"
         "ProcessManager.h"
@@ -26,5 +33,8 @@ add_executable(main main.cpp
         "RoundRobinScheduler.cpp"
         "ScreenCommands.h"
         "ScreenCommands.cpp"
-        "IScheduler.h"
- "PrintCommand.cpp" "PrintCommand.h")
+        "SleepCommand.cpp"
+        "SleepCommand.h"
+        "SubtractCommand.cpp"
+        "SubtractCommand.h"
+ "ForCommand.cpp" "ForCommand.h")
