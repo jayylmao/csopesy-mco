@@ -44,14 +44,14 @@ void Process::executeInstruction()
 {
 	std::lock_guard<std::mutex> lock(mtx);
 	if (!instructionQueue.empty()) {
-		auto cmd = instructionQueue.front();
+		auto cmd = std::move(instructionQueue.front());
 		instructionQueue.pop();
 
 		if (cmd) {
 			cmd->execute(*this);
 			//THIS IS THE NEW ONE CAN REMOVE IF NOT WORKING|| BELOW THIS
 			if (cmd->getType() == ICommand::PRINT) {
-				auto printCmd = std::dynamic_pointer_cast<PrintCommand>(cmd);
+				auto printCmd = dynamic_cast<PrintCommand*>(cmd.get());
 				if (printCmd) {
 					// Use this->coreId!
 					auto now = std::chrono::system_clock::now();
@@ -73,7 +73,7 @@ void Process::executeInstruction()
 	}
 }
 
-std::shared_ptr<ICommand> Process::createCommand(int type)
+std::unique_ptr<ICommand> Process::createCommand(int type)
 {
 	switch (type) {
 	case ICommand::PRINT: {
@@ -125,17 +125,15 @@ std::shared_ptr<ICommand> Process::createCommand(int type)
 		return std::make_unique<SleepCommand>(sleepTicks);
 	}
 	case ICommand::FOR: {
-		int nesting = rand() % 3 + 1; // 1–3 depth
-		int repeatCount = rand() % 5 + 1;
-
-		std::vector<std::shared_ptr<ICommand>> body;
+		std::vector<std::unique_ptr<ICommand>> body;
+		int type;
 
 		for (int i = 0; i < 2; ++i) {
-			int type = rand() % 5; // exclude FOR to avoid infinite recursion
+			type = rand() % 6;
 			body.push_back(createCommand(type)); // nested command
 		}
 
-		return std::make_unique<SleepCommand>(10);
+		return std::make_unique<ForCommand>(std::move(body), 2);
 	}
 	default:
 		throw std::invalid_argument("Unknown command type");

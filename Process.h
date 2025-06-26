@@ -35,7 +35,7 @@ class Process {
 public:
 	Process(const std::string& name, int pid, int instructionCount);
 	
-	std::queue<std::shared_ptr<ICommand>> instructionQueue;
+	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
 	
 	void createInstructions();
@@ -75,7 +75,7 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
-	std::shared_ptr<ICommand> createCommand(int type);
+	std::unique_ptr<ICommand> createCommand(int type);
 
 	/**
 	 * @brief Get a variable from the symbol table.
