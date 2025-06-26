@@ -363,6 +363,20 @@ void Shell::outputProcessList(std::ostream& out)
     out << "--------------------" << std::endl;
 }
 
+void Shell::marquee()
+{
+    Marquee marquee(60, "Hello world in marquee!");
+    
+    std::thread inputThread(&Marquee::processInput, std::ref(marquee));
+    std::thread displayThread(&Marquee::refreshDisplay, std::ref(marquee));
+
+    inputThread.join();
+    displayThread.join();
+
+    Shell::clear();
+}
+
+void Shell::schedulerTest()
 
 // shell.cpp - Modified schedulerStart() function
 void Shell::schedulerStart()
@@ -461,6 +475,7 @@ void Shell::clear()
     std::system("clear");
 #endif
 
+    
     printHeader();
 }
 
@@ -550,6 +565,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "report-util") {
         reportUtil();
+    }
+    else if (input_tokens[0] == "marquee") {
+        marquee();
     }
     else if (input_tokens[0] == "clear") {
         clear();
