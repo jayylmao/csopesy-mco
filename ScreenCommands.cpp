@@ -1,5 +1,6 @@
 
 #include "ScreenCommands.h"
+#include "ProcessManager.h"
 #include <iostream>
 #include <iomanip>
 #include <ctime>
@@ -7,8 +8,8 @@
 #include <thread>
 #include <chrono>
 
-ScreenS::ScreenS(const std::string& processName, int totalLines, int pid)
-    : AConsole(processName), totalLineCount(totalLines), processID(pid), currentLine(0) {
+ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm)
+    : AConsole(processName), processID(pid), processManager(pm) {
     creationTimestamp = getCurrentTimestamp();
 }
 
@@ -18,13 +19,27 @@ void ScreenS::onEnabled() {
 }
 
 void ScreenS::display() {
-    std::cout << "\n---------------------------\n";
-    std::cout << "Process: " << name << "\n";
-    std::cout << "PID: " << processID << "\n\n";
-    std::cout << "Current Instruction Line: " << currentLine << "\n";
-    std::cout << "Lines of Code: " << totalLineCount << "\n";
-    std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
-    std::cout << "---------------------------\n";
+    int currentLine = 0;
+    int totalLines = 0;
+
+    if (processManager) {
+        try {
+            Process& process = processManager->getProcess(processID);
+            currentLine = process.getCurrentLine();
+            totalLines = process.getTotalLines();
+        }
+        catch (...) {
+            std::cout << "[!] Could not fetch process state for PID " << processID << "\n";
+        }
+
+        std::cout << "\n---------------------------\n";
+        std::cout << "Process: " << name << "\n";
+        std::cout << "PID: " << processID << "\n\n";
+        std::cout << "Current Instruction Line: " << currentLine << "\n";
+        std::cout << "Lines of Code: " << totalLines << "\n";
+        std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
+        std::cout << "---------------------------\n";
+    }
 }
 
 void ScreenS::process() {

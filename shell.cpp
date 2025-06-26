@@ -220,7 +220,8 @@ void Shell::screen(std::vector<std::string> args)
             return;
         }
 
-        auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
+        int pid = processManager.getNextPID() - 1;
+        auto screen = std::make_shared<ScreenS>(processName, pid, &processManager);
         ConsoleManager::getInstance()->addConsole(processName, screen);
         screen->onEnabled();
         //clear();
@@ -237,27 +238,59 @@ void Shell::screen(std::vector<std::string> args)
         std::string processName = args[1];
         std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
 
-        if (console) {
+        // If no console exists for this process name, check if a process exists in ProcessManager
+        if (!console) 
+        {
+            std::vector<Process*> processes = processManager.listProcesses();
+            Process* found = nullptr;
+            int pid = -1, totalLines = 0;
+
+            for (auto* p : processes) 
+            {
+                if (p->getName() == processName) 
+                {
+                    found = p;
+                    pid = p->getPID();
+                    totalLines = p->getTotalLines();
+                    break;
+                }
+            }
+
+            if (found) 
+            {
+                auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
+                ConsoleManager::getInstance()->addConsole(processName, screenConsole);
+                console = screenConsole;
+            }
+        }
+
+
+        if (console)
+        {
             std::system("cls");
             console->onEnabled();
             std::system("cls");
             printHeader();
         }
-        else {
+        else 
+        {
             std::cout << "[*] No process with name '" << processName << "' found.\n";
         }
         return;
     }
 
-    else if (args.size() > 2) {
+    else if (args.size() > 2)
+    {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     }
-    else if (args[0] == "-s") {
+    else if (args[0] == "-s")
+    {
         std::cout << "[*] Creating process..." << std::endl;
         return;
     }
-    else if (args[0] == "-r") {
+    else if (args[0] == "-r")
+    {
         std::cout << "[*] Redrawing and creating a new process..." << std::endl;
         return;
     }
