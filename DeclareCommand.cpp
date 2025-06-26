@@ -10,6 +10,6 @@ void DeclareCommand::execute(Process& process) {
     process.setVar(variableName, value);
 
     std::string log = "Declared variable '" + variableName + "' = " + std::to_string(value);
-	//std::cout << "[PID: " << process.getPID() << "] " << log << std::endl;  
+	std::cout << "[PID: " << process.getPID() << "] " << log << std::endl;  
     process.logs.push_back(log);
 }
