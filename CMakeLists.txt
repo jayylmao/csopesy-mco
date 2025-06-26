@@ -16,8 +16,8 @@ add_executable(main main.cpp
         "FCFSScheduler.cpp"
         "ICommand.h"
         "ICommand.cpp"
-        "PrintCommand.h"
-        "PrintCommand.cpp"
+        
+        
         "Process.h"
         "Process.cpp"
         "ProcessManager.h"
@@ -27,4 +27,4 @@ add_executable(main main.cpp
         "ScreenCommands.h"
         "ScreenCommands.cpp"
         "IScheduler.h"
-)
+ "PrintCommand.cpp" "PrintCommand.h")

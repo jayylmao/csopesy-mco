@@ -1,8 +1,14 @@
 #include "shell.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
+#include "AConsole.h"
+#include "ScreenCommands.h"
 
 #include <chrono>
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <algorithm>
+#include <cstdlib>
+#include <memory>
 
 Shell::Shell(int cores) :
     init(false),

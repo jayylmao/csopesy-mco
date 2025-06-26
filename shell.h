@@ -1,24 +1,14 @@
 #pragma once
-
-#include "AConsole.h"
-#include "ScreenCommands.h"
 #include "ConsoleManager.h"
 #include "ProcessManager.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
 #include "ConfigManager.h"
 #include "IScheduler.h"
+#include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <memory>
 #include <string>
-#include <vector>
-#include <thread>
 #include <atomic>
-
-#include <fstream>
-#include <algorithm>
+#include <vector>
 
 /**
  * @class Shell
