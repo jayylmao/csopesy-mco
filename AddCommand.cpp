@@ -17,12 +17,11 @@ void AddCommand::execute(Process& process) {
 
     process.setVar(dest, clampedSum);
 
-    std::string log = "ADD: " + dest + " = " + lhs + " + " + rhs +
+    /*std::string log = "ADD: " + dest + " = " + lhs + " + " + rhs +
         " -> " + std::to_string(leftVal) + " + " + std::to_string(rightVal) +
         " = " + std::to_string(clampedSum);
 
-    std::cout << log << std::endl;
-    process.logs.push_back(log);
+    std::cout << "add" << std::endl;*/
 }
 
 uint16_t AddCommand::resolveOperand(const std::string& operand, Process& process) {

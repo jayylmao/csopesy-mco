@@ -68,9 +68,13 @@ void ScreenS::processSMI() {
 
 void ScreenS::process() {
     std::string input;
+	bool skipDisplay = false;
 
     while (true) {
-        display();
+        if(!skipDisplay)
+            display();
+        skipDisplay =false;
+
         std::cout << "\n type exit to Exit. \n";
         std::cout << "\nroot:\\> ";
         std::getline(std::cin, input);
@@ -83,6 +87,7 @@ void ScreenS::process() {
         else if(input == "process-smi") 
         {
 			processSMI();
+            skipDisplay= true;
         }
         else 
         {

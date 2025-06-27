@@ -33,6 +33,7 @@ public:
 	virtual void execute(Process& process);
 
 	std::string getTimestamp();
+	int depth = 0; // track depth in for loop.
 
 protected:
 	std::string creationTimestamp;

@@ -18,12 +18,11 @@ void SubtractCommand::execute(Process& process) {
 
     process.setVar(dest, clampedResult);
 
-    std::string log = "SUB: " + dest + " = " + lhs + " - " + rhs +
+    /*std::string log = "SUB: " + dest + " = " + lhs + " - " + rhs +
         "-> " + std::to_string(leftVal) + " - " + std::to_string(rightVal) +
-        " = " + std::to_string(clampedResult);
+        " = " + std::to_string(clampedResult);*/
 
-    std::cout << log << std::endl;
-    process.logs.push_back(log);
+    std::cout << "subtract" << std::endl;
 }
 
 uint16_t SubtractCommand::resolveOperand(const std::string& operand, Process& process) {

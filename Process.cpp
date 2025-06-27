@@ -49,7 +49,7 @@ void Process::executeInstruction()
 
 		if (cmd) {
 			cmd->execute(*this);
-			//THIS IS THE NEW ONE CAN REMOVE IF NOT WORKING|| BELOW THIS
+		/*	//THIS IS THE NEW ONE CAN REMOVE IF NOT WORKING|| BELOW THIS
 			if (cmd->getType() == ICommand::PRINT) {
 				auto printCmd = dynamic_cast<PrintCommand*>(cmd.get());
 				if (printCmd) {
@@ -65,6 +65,7 @@ void Process::executeInstruction()
 				}
 			}
 			//ABOVE THIS
+			*/
 		}
 
 		if (instructionQueue.empty()) {
@@ -127,13 +128,66 @@ std::unique_ptr<ICommand> Process::createCommand(int type)
 	case ICommand::FOR: {
 		std::vector<std::unique_ptr<ICommand>> body;
 		int type;
+		//int depth = 1;
+		//int Count = 0;
+	//	std::cout << "Depth increased to: " << depth << std::endl;
 
-		for (int i = 0; i < 2; ++i) {
-			type = rand() % 6;
-			body.push_back(createCommand(type)); // nested command
+		
+		const int NUM_TYPES = 6; // Adjust as needed: PRINT, DECLARE, ADD, etc. // 0-5
+		int randTypeVal;
+		int randInsCount1, randInsCount2, randInsCount3;
+
+		randInsCount1 = rand() % 5 + 1;
+
+		//std::cout << "dept 1 ins: " << randInsCount1 << std::endl;
+		for (int i = 1; i <= randInsCount1; ++i) {
+			randTypeVal = rand() % NUM_TYPES;
+			//std::cout << i << randTypeVal << std::endl;
+
+			if(randTypeVal == 5){
+				//depth = 2; //2
+					
+				randInsCount2 = rand() % 5 + 1;
+				//std::cout << "\t" << "dept 2 ins: " << randInsCount2 << std::endl;
+
+				for (int i = 1; i <= randInsCount2; ++i) {
+					randTypeVal = rand() % NUM_TYPES;
+					//std::cout << "\t" << i << randTypeVal << std::endl;
+
+					if (randTypeVal == 5){
+						//depth = 3 ; // 3
+
+						randInsCount3 = rand() % 5 + 1;
+						//std::cout << "\t\t" << "depth 3 ins: " << randInsCount3 << std::endl;
+							
+						for (int i = 1; i <= randInsCount3; ++i) {
+							randTypeVal = rand() % (NUM_TYPES - 1);
+							//std::cout << "\t\t" << i <<randTypeVal << std::endl;
+
+							body.push_back(createCommand(randTypeVal));
+							//Count++;
+						}
+					}
+					else {
+						body.push_back(createCommand(randTypeVal));
+						//Count++;
+					}
+				}
+			}
+			else{
+				body.push_back(createCommand(randTypeVal));
+				//Count++;
+			}
 		}
+		//std::cout << "Count" << Count << std::endl;
 
-		return std::make_unique<ForCommand>(std::move(body), 2);
+		//for (int i = 0; i < 2; ++i) {
+		//		type = rand() % 6;
+		//		body.push_back(createCommand(type)); // nested command
+		//	}
+
+		int repeatCount = rand() % 3 + 1;
+		return std::make_unique<ForCommand>(std::move(body), repeatCount);
 	}
 	default:
 		throw std::invalid_argument("Unknown command type");

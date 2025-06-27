@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <memory>
 #include <random>
+#include <time.h>
 
 Shell::Shell(int cores) :
     init(false),
@@ -21,6 +22,7 @@ Shell::Shell(int cores) :
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
 {
+    srand(time(0));
 }
 
 Shell::~Shell() {
