@@ -27,11 +27,15 @@
 #include <random>
 #include <cstdint>
 
+
+//forward declare 
+class PrintCommand;
 /**
  * @class Process
  * @brief Represents a process running on the operating system.
  */
 class Process {
+	friend class PrintCommand;
 public:
 	Process(const std::string& name, int pid, int instructionCount);
 	

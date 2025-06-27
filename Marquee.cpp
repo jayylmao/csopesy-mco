@@ -1,272 +1,223 @@
 #include "Marquee.h"
 
-constexpr short DISPLAY_OFFSET = 3;
+std::string currentInput = "";
+std::mutex MarqueeMutex;
+std::vector<std::string> commandHistory;
 
-Marquee::Marquee(short refreshRate, const std::string message)
+Marquee::Marquee()
 {
-	// get info from the screen buffer.
-	CONSOLE_SCREEN_BUFFER_INFO buffer;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &buffer);
-
-	// set screen width and height based on terminal size.
-	setWidth(buffer.srWindow.Right - buffer.srWindow.Left + 1);
-	setHeight(buffer.srWindow.Bottom - buffer.srWindow.Top + 1);
-
-	// set refresh rate.
-	setRefreshRate(refreshRate);
-
-	// set marquee message.
-	setMessage(message);
-
-	// set inputs.
-	setInput("");
-	setProcessedInput("");
-
-	// initialize marquee coordinates as (0, 0).
-	setXPos(0);
-	setYPos(0);
-
-	setXDir(MARQUEE_RIGHT);
-	setYDir(MARQUEE_DOWN);
-
-	// reset quit flag.
-	setQuit(false);
+    init = false;
+    quit = false;
 }
 
-void Marquee::addChar(char c)
+bool Marquee::getQuit() const
 {
-	input.append(1, c);
+    return quit;
 }
 
-void Marquee::deleteChar()
+void Marquee::setQuit()
 {
-	// do nothing if input is already empty.
-	if (input.empty()) {
-		return;
-	}
-
-	input.pop_back();
+    quit = true;
 }
 
-void Marquee::setWidth(short width)
+void Marquee::initialize()
 {
-	this->width = width;
+    if (!init) {
+        init = true;
+        printHeader();
+        // Start marquee animation in a separate thread
+        std::thread marqueeThread(&Marquee::runMarquee, this);
+
+        // Start input handling in main thread
+        while (!getQuit()) {
+            prompt();
+        }
+
+        marqueeThread.join(); // Wait for the marquee thread to finish (on quit)
+    }
+    else {
+        std::cout << "[i] initialize command recognized. Doing something." << std::endl;
+    }
 }
 
-void Marquee::setHeight(short height)
+void Marquee::clear()
 {
-	// subtract to make room for header and prompt.
-	this->height = height - DISPLAY_OFFSET;
-}
+    std::cout << "[i] clear command recognized. Doing something." << std::endl;
+#ifdef _WIN32
+    std::vector<std::string>().swap(commandHistory); //clears vector and free ups memory
+    std::system("cls");
 
-void Marquee::setRefreshRate(short n)
-{
-	this->refreshRate = n;
-}
+#else
+    std::system("clear");
+#endif
 
-void Marquee::setMessage(const std::string message)
-{
-	this->message = message;
-}
-
-void Marquee::setXPos(short x)
-{
-	if (x > getWidth()) {
-		this->xPos = width;
-	}
-	else if (x < 0) {
-		this->xPos = 0;
-	}
-	else {
-		this->xPos = x;
-	}
-}
-
-void Marquee::setYPos(short y)
-{
-	if (y > getHeight()) {
-		this->yPos = getHeight();
-	}
-	else if (y < 0) {
-		this->yPos = 0;
-	}
-	else {
-		this->yPos = y;
-	}
+    printHeader();
 }
 
 
-short Marquee::getRefreshRate() const
+void Marquee::printHeader()
 {
-	return 1000 / this->refreshRate;
+    std::cout << "**********************************************\n"
+        << "* Displaying a marquee console!             *\n"
+        << "**********************************************\n";
 }
 
-std::string Marquee::getMessage() const
-{
-	return this->message;
+void Marquee::runMarquee() {
+    const std::string text = "Hello world in marquee!";
+    const int delayMs = 16; //1000/60 (Ms/fps)
+
+    // console handle
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    // console size
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    int width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+    // Header takes 3 lines and Prompt takes 6 lines
+    const int headerHeight = 3;
+    int promptHeight = 6;
+    int marqueeBottomLimit = height - promptHeight;
+
+    // Initial position and direction
+    int x = 0, y = headerHeight;
+    int dx = 1, dy = 1;
+
+    int prevWidth = width, prevHeight = height;
+
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(hConsole, &cursorInfo);
+    cursorInfo.bVisible = TRUE;
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
+
+    while (!quit) {
+        {
+            std::lock_guard<std::mutex> lock(MarqueeMutex);  //mutex lock
+
+            // Accommodates window resizing
+            GetConsoleScreenBufferInfo(hConsole, &csbi);
+            width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+            if (width != prevWidth || height != prevHeight) {
+                prevWidth = width;
+                prevHeight = height;
+                marqueeBottomLimit = height - promptHeight;
+
+
+                // Snap x to max allowed horizontal position
+                if (x + static_cast<int>(text.length()) >= width) {
+                    x = width - static_cast<int>(text.length()) - 1;
+                    if (x < 0) x = 0;
+                }
+
+                // Snap y to bottom limit
+                if (y >= marqueeBottomLimit) {
+                    y = marqueeBottomLimit - 1;
+                    if (y < headerHeight) y = headerHeight;
+                }
+            }
+
+            system("cls");
+            printHeader();
+
+            // Update position
+            x += dx;
+            y += dy;
+
+            // Bounce horizontally
+            if (x <= 0 || x + text.length() >= width) dx = -dx;
+            // Bounce vertically (after header)
+            if (y <= headerHeight || y >= marqueeBottomLimit - 1) dy = -dy;
+
+            // Draw marquee
+            COORD newPos = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
+            SetConsoleCursorPosition(hConsole, newPos);
+            std::cout << text << std::flush;
+
+            // Prompt area
+            COORD promptLine = { 0, static_cast<SHORT>(height - promptHeight) };
+            SetConsoleCursorPosition(hConsole, promptLine);
+            std::cout << "Enter a command for MARQUEE_CONSOLE: " << currentInput << std::endl;
+
+            SHORT line = height;
+            for (const auto& command : commandHistory) {
+                COORD historyPos = { 0, line++ };
+                SetConsoleCursorPosition(hConsole, historyPos);
+                std::cout << command << std::endl;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+    }
 }
 
-short Marquee::getXPos() const
+void Marquee::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
 {
-	return this->xPos;
+    // push an empty string and return to avoid going through the splitting process if input is empty.
+    if (string.empty()) {
+        tokens.push_back("");
+        return;
+    }
+
+    size_t start;
+    size_t end = 0;
+
+    // find start and end of non-delimiter substrings and push them to a vector.
+    while ((start = string.find_first_not_of(delim, end)) != std::string::npos) {
+        end = string.find(delim, start);
+        tokens.push_back(string.substr(start, end - start));
+    }
 }
 
-short Marquee::getYPos() const
+void Marquee::prompt()
 {
-	return this->yPos;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    char ch;
+    currentInput.clear();
+
+    while (true) {
+        if (_kbhit()) {
+            ch = _getch();
+
+            if (ch == '\r') {  // Enter key
+                {
+                    std::lock_guard<std::mutex> lock(MarqueeMutex);
+
+                    if (!currentInput.empty()) {
+                        commandHistory.push_back("Command Processed in MARQUEE_CONSOLE : " + currentInput);
+                    }
+                }
+
+                std::vector<std::string> tokens;
+                splitString(currentInput, ' ', tokens);
+
+                std::string cmd = tokens.empty() ? "" : tokens[0];
+
+                if (cmd == "clear") {
+                    clear();
+                }
+                else if (cmd == "exit") {
+                    setQuit();
+                }
+                else if (!cmd.empty()) {
+                }
+
+                currentInput.clear();
+                break;
+            }
+            else if (ch == '\b') {  // Backspace
+                if (!currentInput.empty()) {
+                    currentInput.pop_back();
+                }
+            }
+            else if (isprint(ch)) {
+                currentInput += ch;
+            }
+        }
+
+        // Let marquee thread update in background
+        std::this_thread::sleep_for(std::chrono::milliseconds(4));
+    }
 }
 
-short Marquee::getWidth() const
-{
-	return this->width;
-}
-
-short Marquee::getHeight() const
-{
-	return this->height;
-}
-
-std::string Marquee::getInput() const
-{
-	return this->input;
-}
-
-std::string Marquee::getProcessedInput() const
-{
-	return this->processedInput;
-}
-
-short Marquee::getXDir() const
-{
-	return this->xDir;
-}
-
-short Marquee::getYDir() const
-{
-	return this->yDir;
-}
-
-bool Marquee::isQuit() const
-{
-	return this->quit;
-}
-
-void Marquee::setQuit(bool q)
-{
-	this->quit = q;
-}
-
-void Marquee::setCursorPos(short x, short y)
-{
-	// create set of coordinates from given x and y.
-	COORD c = { x, y };
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
-}
-
-void Marquee::setProcessedInput(const std::string input)
-{
-	this->processedInput = input;
-}
-
-void Marquee::setInput(const std::string input)
-{
-	this->input = input;
-}
-
-void Marquee::setXDir(short dir)
-{
-	this->xDir = dir;
-}
-
-void Marquee::setYDir(short dir)
-{
-	this->yDir = dir;
-}
-
-void Marquee::processInput()
-{
-	while (!isQuit()) {
-		if (_kbhit()) {
-			char c = getch();
-
-			// process input if carriage return is detected.
-			if (c == '\r') {
-				setProcessedInput(getInput());
-				setInput("");
-				std::system("cls");
-			}
-			else if (c == '\b') {
-				deleteChar();
-			}
-			else {
-				addChar(c);
-			}
-
-			// exit marquee console if command is given.
-			if (getProcessedInput() == "exit") {
-				setQuit(true);
-			}
-			else if (getProcessedInput() == "clear") {
-				std::system("cls");
-				setProcessedInput("");
-			}
-		}
-	}
-}
-
-void Marquee::moveMarquee()
-{
-	// increment x and y positions.
-	setXPos(getXPos() + getXDir());
-	setYPos(getYPos() + getYDir());
-
-	// check x direction.
-	if (getXPos() + getMessage().length() >= getWidth()) {
-		setXDir(MARQUEE_LEFT);
-	}
-	if (getXPos() <= 0) {
-		setXDir(MARQUEE_RIGHT);
-	}
-	
-	// check y direction.
-	if (getYPos() >= getHeight() - DISPLAY_OFFSET - 2) {
-		setYDir(MARQUEE_DOWN);
-	}
-	if (getYPos() <= 0) {
-		setYDir(MARQUEE_UP);
-	}
-}
-
-void Marquee::refreshDisplay()
-{
-	while (!isQuit()) {
-		int currLine = 0;
-		const std::string prompt = "user ~/marquee > ";
-		// refresh screen
-		std::this_thread::sleep_for(std::chrono::milliseconds(getRefreshRate()));
-		std::system("cls");
-
-		// display header.
-		setCursorPos(0, currLine);
-		std::cout << "********************************" << std::endl
-			<< "* Displaying a marquee console *" << std::endl
-			<< "********************************" << "width: " << getWidth() << "height: " << getHeight() << std::endl;
-
-		moveMarquee();
-		setCursorPos(getXPos(), getYPos() + DISPLAY_OFFSET);
-		std::cout << getMessage();
-
-		currLine = getHeight();
-
-		// display prompt.
-		if (!getProcessedInput().empty()) {
-			setCursorPos(0, currLine);
-			std::cout << "[History] " << prompt << getProcessedInput() << std::endl;
-			currLine++;
-		}
-
-		setCursorPos(0, currLine);
-		std::cout << prompt << getInput() << std::endl;
-		setCursorPos(prompt.length() + getInput().length(), currLine);
-	}
-}

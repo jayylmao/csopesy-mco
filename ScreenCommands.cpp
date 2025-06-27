@@ -8,6 +8,8 @@
 #include <thread>
 #include <chrono>
 
+std::mutex screenMutex;
+
 ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm)
     : AConsole(processName), processID(pid), processManager(pm) {
     creationTimestamp = getCurrentTimestamp();
@@ -43,25 +45,28 @@ void ScreenS::display() {
 }
 //NEW ONE
 void ScreenS::processSMI() {
-	if (processManager) {
-		try {
-			Process& process = processManager->getProcess(processID);
-			std::cout << "\nProcess Name: " << process.getName() << "\n";
-			std::cout << "PID: " << process.getPID() << "\n";
-			std::cout << "Logs:\n";
-			for (const auto& log : process.logs) {
-				std::cout << log << "\n";
-			}
-			std::cout << "\nCurrent instruction line: " << process.getCurrentLine() << "\n";
-			std::cout << "Lines of code: " << process.getTotalLines() << "\n";
-			if (process.hasFinished()) {
-				std::cout << "\nFinished!\n";
-			}
-		}
-		catch (...) {
-			std::cout << "[!] Could not fetch process state.\n";
-		}
-	}
+    
+        std::lock_guard<std::mutex> lock(screenMutex);
+        if (processManager) {
+            try {
+                Process& process = processManager->getProcess(processID);
+                std::cout << "\nProcess Name: " << process.getName() << "\n";
+                std::cout << "PID: " << process.getPID() << "\n";
+                std::cout << "Logs:\n";
+                for (const auto& log : process.logs) {
+                    std::cout << log << "\n";
+                }
+                std::cout << "\nCurrent instruction line: " << process.getCurrentLine() << "\n";
+                std::cout << "Lines of code: " << process.getTotalLines() << "\n";
+                if (process.hasFinished()) {
+                    std::cout << "\nFinished!\n";
+                }
+            }
+            catch (...) {
+                std::cout << "[!] Could not fetch process state.\n";
+            }
+        }
+    
 	std::cout << "---------------------\n";
 }
 //TILL HERE

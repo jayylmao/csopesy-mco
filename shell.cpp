@@ -382,13 +382,9 @@ void Shell::outputProcessList(std::ostream& out)
 
 void Shell::marquee()
 {
-    Marquee marquee(60, "Hello world in marquee!");
+    Marquee marquee;
     
-    std::thread inputThread(&Marquee::processInput, std::ref(marquee));
-    std::thread displayThread(&Marquee::refreshDisplay, std::ref(marquee));
-
-    inputThread.join();
-    displayThread.join();
+    marquee.initialize();
 
     Shell::clear();
 }

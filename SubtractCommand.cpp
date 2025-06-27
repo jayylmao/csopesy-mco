@@ -21,8 +21,6 @@ void SubtractCommand::execute(Process& process) {
     /*std::string log = "SUB: " + dest + " = " + lhs + " - " + rhs +
         "-> " + std::to_string(leftVal) + " - " + std::to_string(rightVal) +
         " = " + std::to_string(clampedResult);*/
-
-    std::cout << "subtract" << std::endl;
 }
 
 uint16_t SubtractCommand::resolveOperand(const std::string& operand, Process& process) {
