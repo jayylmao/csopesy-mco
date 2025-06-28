@@ -13,11 +13,10 @@
 #include <random>
 #include <time.h>
 
-Shell::Shell(int cores) :
+Shell::Shell() :
     init(false),
     quit(false),
     focusedPID(0),
-    cores(cores),
     scheduler(nullptr),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
@@ -94,12 +93,13 @@ void Shell::initialize() {
 
 
 	// Read and validate num-cores
-    if (config.find("num-cores") != config.end()) {
+    if (config.find("num-cpu") != config.end()) {
         try {
-            cores = std::stoi(config.at("num-cores"));
-            if (cores < 1 || cores > 16) {
-                std::cerr << "[!] Invalid num-cores value ("
-                    << cores << "). Must be between 1-16. Using default (4)." << std::endl;
+            std::cout << "core count: " << std::stoi(config.at("num-cpu")) << std::endl;
+            cores = std::stoi(config.at("num-cpu"));
+            if (cores < 1 || cores > 128) {
+                std::cerr << "[!] Invalid num-cpu value ("
+                    << cores << "). Must be between 1-128. Using default (4)." << std::endl;
                 cores = 4;
             }
         }
@@ -360,7 +360,7 @@ void Shell::outputProcessList(std::ostream& out)
     for (const auto& proc : processes) {
         if (!(proc->hasFinished())) {
             std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
-            out << proc->getName() << "\t(" << proc->getCreationTimestamp()
+            out << proc->getName() << " \t(" << proc->getCreationTimestamp()
                 << ")\tCore: " << coreDisplay << "\t" << proc->getCurrentLine() << "/" << proc->getTotalLines()
                 << std::endl;
         }

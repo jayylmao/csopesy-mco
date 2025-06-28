@@ -70,7 +70,6 @@ void FCFSScheduler::coreWorker(int coreId)
             int pid = process->getPID();
 
             for (int i = 0; i < process->getTotalLines(); ++i) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 process->executeInstruction();
             }
         }

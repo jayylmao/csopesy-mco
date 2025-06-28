@@ -106,6 +106,7 @@ private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
 	int totalInstructions; // number of instructions contained in process to execute.
+	int executedInstructions = 0;
 
 	std::string creationTimestamp;
 

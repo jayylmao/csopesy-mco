@@ -49,8 +49,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
 
         int slice = 0;
         while (!process->hasFinished() && slice < timeQuantum) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
             process->executeInstruction();
             ++slice;
         }

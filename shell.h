@@ -16,7 +16,7 @@
  */
 class Shell {
 public:
-    Shell(int cores);
+    Shell();
     ~Shell();
     /**
      * @brief Print header and initialize operating system.

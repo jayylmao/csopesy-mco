@@ -49,23 +49,6 @@ void Process::executeInstruction()
 
 		if (cmd) {
 			cmd->execute(*this);
-		/*	//THIS IS THE NEW ONE CAN REMOVE IF NOT WORKING|| BELOW THIS
-			if (cmd->getType() == ICommand::PRINT) {
-				auto printCmd = dynamic_cast<PrintCommand*>(cmd.get());
-				if (printCmd) {
-					// Use this->coreId!
-					auto now = std::chrono::system_clock::now();
-					std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-					std::tm local_tm = *std::localtime(&now_c);
-					std::ostringstream oss;
-					oss << "(" << std::put_time(&local_tm, "%m/%d/%Y %I:%M:%S%p")
-						<< ") Core: " << coreId
-						<< " \"" << printCmd->getMsg() << "\"";
-					logs.push_back(oss.str());
-				}
-			}
-			//ABOVE THIS
-			*/
 		}
 
 		if (instructionQueue.empty()) {
