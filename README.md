@@ -1,10 +1,10 @@
 # CSOPESY MO1
-## Group 11
+## S18 Group 11
 
-Carlos, Jay Michael
-Diego, Nico
-Reyes, Janica Megan
-Santos, Emmanuel
+- Carlos, Jay Michael
+- Diego, Nico
+- Reyes, Janica Megan
+- Santos, Emmanuel
 
 ## Instructions on running
 1. Open Visual Studio.
