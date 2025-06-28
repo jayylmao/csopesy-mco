@@ -66,7 +66,6 @@ int Shell::getCores()
 }
 
 void Shell::initialize() {
-    init = true;
     // Reload configuration every time
     std::cout << "[i] Loading configuration..." << std::endl;
     configManager.loadConfig("config.txt");
@@ -111,6 +110,7 @@ void Shell::initialize() {
     }
 
     if (init) {
+
         // Create scheduler based on config
         std::string schedulerType;
         bool validScheduler = false;
@@ -204,7 +204,7 @@ void Shell::initialize() {
 
     }
     else {
-        std::cout << "[i] Configuration reloaded." << std::endl;
+        std::cout << "[i] Configuration loaded." << std::endl;
     }
 }
 
