@@ -6,6 +6,9 @@
 - Reyes, Janica Megan
 - Santos, Emmanuel
 
+## Entry class
+`main.cpp`
+
 ## Instructions on running
 1. Open Visual Studio.
 2. Click on 'Clone a repository'.
