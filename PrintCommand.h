@@ -1,28 +1,18 @@
 #pragma once
 #include "ICommand.h"
 #include <string>
-#include <iostream>
-#include <fstream>
 
-/**
- * @class PrintCommand
- * @brief Command for printing a string.
- */
 class PrintCommand : public ICommand {
 public:
-	/**
-	 * @brief Create a command to print a message.
-	 */
-	PrintCommand(const std::string& msg, int coreId, const std::string& procName, int pid);
+    PrintCommand(std::string msg) : ICommand(Type::PRINT), msg(msg) {}
+    PrintCommand(std::string msg, std::string var) : ICommand(Type::PRINT), msg(msg), var(var) {}
 
-
-	/**
-	 * @brief Execute the command. Temporary: print to a text file.
-	 */
-	void execute() override;
+    // Override the execute method
+    void execute(Process& process) override;
+	const std::string& getMsg() const { return msg; }
 
 private:
-	std::string message;
-	int coreId;              
-	std::string procName;    
+    std::string msg;
+    std::string var;
+    uint16_t val;
 };

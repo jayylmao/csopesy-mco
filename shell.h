@@ -1,24 +1,14 @@
 #pragma once
-
-#include "AConsole.h"
-#include "ScreenCommands.h"
 #include "ConsoleManager.h"
 #include "ProcessManager.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
 #include "ConfigManager.h"
 #include "IScheduler.h"
+#include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <memory>
 #include <string>
-#include <vector>
-#include <thread>
 #include <atomic>
-
-#include <fstream>
-#include <algorithm>
+#include <vector>
 
 /**
  * @class Shell
@@ -26,7 +16,7 @@
  */
 class Shell {
 public:
-    Shell(int cores);
+    Shell();
     ~Shell();
     /**
      * @brief Print header and initialize operating system.
@@ -43,11 +33,17 @@ public:
      * @brief List all running processes.
      */
     void screenList();
-    
+
     /**
      * @brief prints all processes.
      */
     void outputProcessList(std::ostream& out);
+
+    /**
+     * @brief Generate a random number with the range 
+     * determined by the minIns and maxIns parameters in the 
+     */
+    int randomNumber();
 
     /**
      * @brief Continuously create new process instances until the user calls the stop command.
@@ -63,6 +59,11 @@ public:
      * @brief Display a report of CPU usage and progress.
      */
     void reportUtil();
+
+    /**
+     * @brief Display a live-refresh marquee.
+     */
+    void marquee();
 
     /**
      * @brief Splits a given input string given a delimiter and returns a vector of tokens.
@@ -132,7 +133,7 @@ public:
     int getCores();
 
 private:
-    bool init; // System starts uninitialized at first.
+    bool init = false; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
     int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;
@@ -142,6 +143,10 @@ private:
     std::atomic<bool> batchProcessActive;  // Flag to control batch process generation
     std::thread batchThread;               // Thread for generating batch processes
     int batchFreq;                         // Frequency of batch process generation (CPU cycles)
+
+
+	int minIns = 1;                        //default instructions for the config min-ins and max-ins
+	int maxIns = 2000;
 
     ProcessManager processManager;
     ConfigManager configManager;

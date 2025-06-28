@@ -1,18 +1,27 @@
 #include "shell.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
+#include "AConsole.h"
+#include "ScreenCommands.h"
+#include "Marquee.h"
 
 #include <chrono>
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <algorithm>
+#include <cstdlib>
+#include <memory>
+#include <random>
+#include <time.h>
 
-Shell::Shell(int cores) :
+Shell::Shell() :
     init(false),
     quit(false),
     focusedPID(0),
-    cores(cores),
     scheduler(nullptr),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
 {
+    srand(time(0));
 }
 
 Shell::~Shell() {
@@ -68,14 +77,29 @@ void Shell::initialize() {
         std::cout << "[!] Config unable to be read. Check if file exists or is in out>build>x64-debug" << std::endl;
     }
 
-    // Read and validate num-cores
+    
     const auto& config = configManager.getConfig();
-    if (config.find("num-cores") != config.end()) {
+    // Sets minIns and Max Ins
+	if (config.find("min-ins") != config.end()) 
+    {
+		minIns = std::stoi(config.at("min-ins"));
+	}
+	if (config.find("max-ins") != config.end()) 
+    {
+		maxIns = std::stoi(config.at("max-ins"));
+	}
+    // Swaps if min greater than max
+	if (minIns > maxIns) std::swap(minIns, maxIns); 
+
+
+	// Read and validate num-cores
+    if (config.find("num-cpu") != config.end()) {
         try {
-            cores = std::stoi(config.at("num-cores"));
-            if (cores < 1 || cores > 16) {
-                std::cerr << "[!] Invalid num-cores value ("
-                    << cores << "). Must be between 1-16. Using default (4)." << std::endl;
+            std::cout << "core count: " << std::stoi(config.at("num-cpu")) << std::endl;
+            cores = std::stoi(config.at("num-cpu"));
+            if (cores < 1 || cores > 128) {
+                std::cerr << "[!] Invalid num-cpu value ("
+                    << cores << "). Must be between 1-128. Using default (4)." << std::endl;
                 cores = 4;
             }
         }
@@ -87,7 +111,6 @@ void Shell::initialize() {
 
     if (!init) {
         init = true;
-
         // Create scheduler based on config
         std::string schedulerType;
         bool validScheduler = false;
@@ -181,7 +204,7 @@ void Shell::initialize() {
 
     }
     else {
-        std::cout << "[i] Configuration reloaded." << std::endl;
+        std::cout << "[i] Configuration loaded." << std::endl;
     }
 }
 
@@ -206,8 +229,7 @@ void Shell::screen(std::vector<std::string> args)
         std::string processName = args[1];
 
         //simulated total lines
-        int totalLines = 100;
-        processManager.createProcess(processName, totalLines);
+        processManager.createProcess(processName, randomNumber());
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
 
@@ -220,7 +242,8 @@ void Shell::screen(std::vector<std::string> args)
             return;
         }
 
-        auto screen = std::make_shared<ScreenS>(processName, totalLines, processManager.getNextPID() - 1);
+        int pid = processManager.getNextPID() - 1;
+        auto screen = std::make_shared<ScreenS>(processName, pid, &processManager);
         ConsoleManager::getInstance()->addConsole(processName, screen);
         screen->onEnabled();
         //clear();
@@ -237,27 +260,59 @@ void Shell::screen(std::vector<std::string> args)
         std::string processName = args[1];
         std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
 
-        if (console) {
+        // If no console exists for this process name, check if a process exists in ProcessManager
+        if (!console) 
+        {
+            std::vector<Process*> processes = processManager.listProcesses();
+            Process* found = nullptr;
+            int pid = -1, totalLines = 0;
+
+            for (auto* p : processes) 
+            {
+                if (p->getName() == processName) 
+                {
+                    found = p;
+                    pid = p->getPID();
+                    totalLines = p->getTotalLines();
+                    break;
+                }
+            }
+
+            if (found) 
+            {
+                auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
+                ConsoleManager::getInstance()->addConsole(processName, screenConsole);
+                console = screenConsole;
+            }
+        }
+
+
+        if (console)
+        {
             std::system("cls");
             console->onEnabled();
             std::system("cls");
             printHeader();
         }
-        else {
+        else 
+        {
             std::cout << "[*] No process with name '" << processName << "' found.\n";
         }
         return;
     }
 
-    else if (args.size() > 2) {
+    else if (args.size() > 2)
+    {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     }
-    else if (args[0] == "-s") {
+    else if (args[0] == "-s")
+    {
         std::cout << "[*] Creating process..." << std::endl;
         return;
     }
-    else if (args[0] == "-r") {
+    else if (args[0] == "-r")
+    {
         std::cout << "[*] Redrawing and creating a new process..." << std::endl;
         return;
     }
@@ -305,7 +360,7 @@ void Shell::outputProcessList(std::ostream& out)
     for (const auto& proc : processes) {
         if (!(proc->hasFinished())) {
             std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
-            out << proc->getName() << "\t(" << proc->getCreationTimestamp()
+            out << proc->getName() << " \t(" << proc->getCreationTimestamp()
                 << ")\tCore: " << coreDisplay << "\t" << proc->getCurrentLine() << "/" << proc->getTotalLines()
                 << std::endl;
         }
@@ -324,8 +379,23 @@ void Shell::outputProcessList(std::ostream& out)
     out << "--------------------" << std::endl;
 }
 
+void Shell::marquee()
+{
+    Marquee marquee;
+    
+    marquee.initialize();
 
-// shell.cpp - Modified schedulerStart() function
+    Shell::clear();
+}
+
+int Shell::randomNumber()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(minIns, maxIns);
+    return dist(gen);
+}
+
 void Shell::schedulerStart()
 {
     if (!init) {
@@ -341,11 +411,14 @@ void Shell::schedulerStart()
     // Start batch processing
     batchProcessActive = true;
     batchThread = std::thread([this]() {
+
+		
+
         int counter = 0;
         while (batchProcessActive) {
             // Create new batch process
             std::string name = "batch_" + std::to_string(counter++);
-            int totalLines = 100; // Default instruction count
+            int totalLines = randomNumber(); //random per process
 
             processManager.createProcess(name, totalLines);
             std::shared_ptr<Process> proc = processManager.getSharedProcess(processManager.getNextPID() - 1);
@@ -411,7 +484,7 @@ void Shell::reportUtil()
         << std::put_time(std::localtime(&raw_time), "%m/%d/%Y %I:%M:%S %p");
 
     outputProcessList(outFile);
-    std::cout << "Report generated." << std::endl;
+    std::cout << "[i] Report generated." << std::endl;
 }
 
 void Shell::clear()
@@ -422,6 +495,7 @@ void Shell::clear()
     std::system("clear");
 #endif
 
+    
     printHeader();
 }
 
@@ -490,7 +564,7 @@ void Shell::prompt()
 
     // Block other commands if not initialized
     if (!init) {
-        if (input_tokens[0] == "help" || input_tokens[0] == "exit") {
+        if (input_tokens[0] == "help" || input_tokens[0] == "exit" || input_tokens[0] == "clear") {
             // Allow these commands
         }
         else {
@@ -511,6 +585,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "report-util") {
         reportUtil();
+    }
+    else if (input_tokens[0] == "marquee") {
+        marquee();
     }
     else if (input_tokens[0] == "clear") {
         clear();

@@ -1,5 +1,4 @@
 #include "FCFSScheduler.h"
-#include "PrintCommand.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -71,14 +70,6 @@ void FCFSScheduler::coreWorker(int coreId)
             int pid = process->getPID();
 
             for (int i = 0; i < process->getTotalLines(); ++i) {
-                // Simulate work
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-                // Log using PrintCommand
-                std::string logMsg = "[" + std::to_string(i + 1) + "] Hello world from " + process->getName();
-                // std::string logMsg = "[Line " + std::to_string(i + 1) + "] PID: " + std::to_string(pid);
-                PrintCommand cmd(logMsg, coreId, process->getName(), pid); // pass pid
-                cmd.execute();
                 process->executeInstruction();
             }
         }

@@ -1,8 +1,4 @@
 #include "RoundRobinScheduler.h"
-#include "PrintCommand.h"
-#include <iostream>
-#include <chrono>
-#include <thread>
 
 RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum)
     : numCores(coreCount), timeQuantum(timeQuantum) {
@@ -53,12 +49,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
 
         int slice = 0;
         while (!process->hasFinished() && slice < timeQuantum) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-            std::string msg = "[" + std::to_string(process->getCurrentLine() + 1) + "] Hello world from " + name;
-            PrintCommand cmd(msg, coreId, name, pid);
-            cmd.execute();
-
             process->executeInstruction();
             ++slice;
         }

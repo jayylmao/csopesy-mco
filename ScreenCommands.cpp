@@ -1,5 +1,6 @@
 
 #include "ScreenCommands.h"
+#include "ProcessManager.h"
 #include <iostream>
 #include <iomanip>
 #include <ctime>
@@ -7,8 +8,10 @@
 #include <thread>
 #include <chrono>
 
-ScreenS::ScreenS(const std::string& processName, int totalLines, int pid)
-    : AConsole(processName), totalLineCount(totalLines), processID(pid), currentLine(0) {
+std::mutex screenMutex;
+
+ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm)
+    : AConsole(processName), processID(pid), processManager(pm) {
     creationTimestamp = getCurrentTimestamp();
 }
 
@@ -18,29 +21,81 @@ void ScreenS::onEnabled() {
 }
 
 void ScreenS::display() {
-    std::cout << "\n---------------------------\n";
-    std::cout << "Process: " << name << "\n";
-    std::cout << "PID: " << processID << "\n\n";
-    std::cout << "Current Instruction Line: " << currentLine << "\n";
-    std::cout << "Lines of Code: " << totalLineCount << "\n";
-    std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
-    std::cout << "---------------------------\n";
+    int currentLine = 0;
+    int totalLines = 0;
+
+    if (processManager) {
+        try {
+            Process& process = processManager->getProcess(processID);
+            currentLine = process.getCurrentLine();
+            totalLines = process.getTotalLines();
+        }
+        catch (...) {
+            std::cout << "[!] Could not fetch process state for PID " << processID << "\n";
+        }
+
+        std::cout << "\n---------------------------\n";
+        std::cout << "Process: " << name << "\n";
+        std::cout << "PID: " << processID << "\n\n";
+        std::cout << "Current Instruction Line: " << currentLine << "\n";
+        std::cout << "Lines of Code: " << totalLines << "\n";
+        std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
+        std::cout << "---------------------------\n";
+    }
 }
+//NEW ONE
+void ScreenS::processSMI() {
+    
+        std::lock_guard<std::mutex> lock(screenMutex);
+        if (processManager) {
+            try {
+                Process& process = processManager->getProcess(processID);
+                std::cout << "\nProcess Name: " << process.getName() << "\n";
+                std::cout << "PID: " << process.getPID() << "\n";
+                std::cout << "Logs:\n";
+                for (const auto& log : process.logs) {
+                    std::cout << log << "\n";
+                }
+                std::cout << "\nCurrent instruction line: " << process.getCurrentLine() << "\n";
+                std::cout << "Lines of code: " << process.getTotalLines() << "\n";
+                if (process.hasFinished()) {
+                    std::cout << "\nFinished!\n";
+                }
+            }
+            catch (...) {
+                std::cout << "[!] Could not fetch process state.\n";
+            }
+        }
+    
+	std::cout << "---------------------\n";
+}
+//TILL HERE
 
 void ScreenS::process() {
     std::string input;
+	bool skipDisplay = false;
 
     while (true) {
-        display();
+        if(!skipDisplay)
+            display();
+        skipDisplay =false;
+
         std::cout << "\n type exit to Exit. \n";
         std::cout << "\nroot:\\> ";
         std::getline(std::cin, input);
 
-        if (input == "exit") {
+        if (input == "exit") 
+        {
             std::cout << "[*] Exiting process '" << name << "'...\n";
             break;
         }
-        else {
+        else if(input == "process-smi") 
+        {
+			processSMI();
+            skipDisplay= true;
+        }
+        else 
+        {
             continue; 
         }
     }

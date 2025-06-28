@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+
+class Process;
 
 /**
  * @class ICommand
@@ -8,15 +11,15 @@ class ICommand {
 public:
 	enum Type
 	{
-		PRINT,
+		PRINT, //0
 		DECLARE,
 		ADD,
 		SUBTRACT,
 		SLEEP,
-		FOR
+		FOR //5
 	};
 
-	ICommand(int pid, Type type);
+	ICommand(Type type);
 	virtual ~ICommand() = default; // Add virtual destructor for proper cleanup
 	
 	/**
@@ -27,9 +30,12 @@ public:
 	/**
 	 * @brief Execute the instruction. The action performed depends on the implementation.
 	 */
-	virtual void execute();
+	virtual void execute(Process& process);
+
+	std::string getTimestamp();
+	int depth = 0; // track depth in for loop.
 
 protected:
-	int pid;
+	std::string creationTimestamp;
 	Type type; // command type.
 };

@@ -1,35 +1,53 @@
 #pragma once
 #include "ICommand.h"
+#include "PrintCommand.h"
+#include "DeclareCommand.h"
+#include "AddCommand.h"
+#include "SubtractCommand.h"
+#include "SleepCommand.h"
+#include "ForCommand.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <chrono>
-
+#include <queue>
+#include <memory>
+#include <unordered_map>
 #include <mutex>
 #include <iomanip>  // for std::put_time
 #include <sstream>  // for std::ostringstream
+#include <cstdint>
 
+
+#include <cstdlib>  // for rand()
+#include <ctime>    // for seeding rand() if needed
+#include <iterator> // for std::advance
+#include <random>
+#include <cstdint>
+
+
+//forward declare 
+class PrintCommand;
 /**
  * @class Process
  * @brief Represents a process running on the operating system.
  */
 class Process {
+	friend class PrintCommand;
 public:
 	Process(const std::string& name, int pid, int instructionCount);
+	
+	std::queue<std::unique_ptr<ICommand>> instructionQueue;
+	std::vector<std::string> logs;
+	
+	void createInstructions();
 
 	/**
 	 * @brief Run one of the process's instructions.
 	 */
 	void executeInstruction();
-
-	/**
-	 * @brief Get the number of remaining instructions in the process.
-	 * @return Number of remaining instructions to be executed.
-	 */
-	int getRemainingInstructions();
 
 	/**
 	 * @brief Get the program's status to see if it has finished executing or not.
@@ -61,6 +79,21 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
+	std::unique_ptr<ICommand> createCommand(int& remaining, int depth);
+
+	/**
+	 * @brief Get a variable from the symbol table.
+	 * @param name Name of the variable.
+	 * @return Value of variable.
+	 */
+	uint16_t getVar(std::string name);
+
+	/**
+	 * @brief Create a variable and store it in the symbol table.
+	 * @param name Name of the variable.
+	 * @param val Value of the variable.
+	 */
+	void setVar(std::string name, uint16_t val);
 
 	void setFinished(bool value);
 
@@ -69,17 +102,18 @@ public:
 
 	int getTotalLines() const;
 
-
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
 	int totalInstructions; // number of instructions contained in process to execute.
-	int remainingInstructions; // number of instructions left to execute.
+	int executedInstructions = 0;
 
 	std::string creationTimestamp;
 
-	int coreId;
-	bool finished;
+	int coreId; // core that the process is running on.
+	bool finished; // flag that tracks whether the process has finished execution.
+
+	std::unordered_map<std::string, uint16_t> symbolTable; // maps variable names to their value
 
 	mutable std::mutex mtx; // protects coreId and finished
 };
