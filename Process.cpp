@@ -31,12 +31,17 @@ void Process::createInstructions()
 {
 	const int NUM_TYPES = 6; // Adjust as needed: PRINT, DECLARE, ADD, etc. // 0-5
 	int randVal;
+	int remainingInstructions = totalInstructions;
 
-	for (int i = 1; i <= totalInstructions; ++i) {
-		randVal = rand() % NUM_TYPES; 
-
-		auto cmd = createCommand(randVal);
-		instructionQueue.push(std::move(cmd));
+	while (remainingInstructions > 0) {
+		auto cmd = createCommand(remainingInstructions, 0);
+		
+		if (cmd) {
+			instructionQueue.push(std::move(cmd));
+		}
+		else {
+			break;
+		}
 	}
 }
 
@@ -57,14 +62,28 @@ void Process::executeInstruction()
 	}
 }
 
-std::unique_ptr<ICommand> Process::createCommand(int type)
+std::unique_ptr<ICommand> Process::createCommand(int& remaining, int depth)
 {
+	const int NUM_TYPES = 6;
+	if (remaining <= 0) return nullptr;
+
+	int type;
+
+	if (depth >= 3) {
+		type = rand() % (NUM_TYPES - 1);
+	}
+	else {
+		type = rand() % NUM_TYPES;
+	}
+
 	switch (type) {
 	case ICommand::PRINT: {
+		--remaining;
 		std::string msg = "Hello world from " + this->name + "!";
 		return std::make_unique<PrintCommand>(msg);
-		}
+	}
 	case ICommand::DECLARE:{
+		--remaining;
 		auto it = symbolTable.begin();
 		std::advance(it, rand() % symbolTable.size());
 
@@ -77,30 +96,21 @@ std::unique_ptr<ICommand> Process::createCommand(int type)
 		uint16_t randomValue = dist(gen);
 
 		return std::make_unique<DeclareCommand>(varName, randomValue);
-		}
-	case ICommand::ADD:{
+	}
+	case ICommand::ADD:
+	case ICommand::SUBTRACT: {
+		--remaining;
 		std::vector<std::string> vars;
-		for (const auto& kv : symbolTable)
-			vars.push_back(kv.first);
+		for (const auto& kv : symbolTable) vars.push_back(kv.first);
+		auto randomVar = [&]() { return vars[rand() % vars.size()]; };
 
-			auto randomVar = [&]() {
-				return vars[rand() % vars.size()];
-			};
-
+		if (type == ICommand::ADD)
 			return std::make_unique<AddCommand>(randomVar(), randomVar(), randomVar());
-		}
-	case ICommand::SUBTRACT:{
-		std::vector<std::string> vars;
-		for (const auto& kv : symbolTable)
-			vars.push_back(kv.first);
-
-		auto randomVar = [&]() {
-			return vars[rand() % vars.size()];
-		};
-
+		else
 			return std::make_unique<SubtractCommand>(randomVar(), randomVar(), randomVar());
-		}
+	}
 	case ICommand::SLEEP:{
+		--remaining;
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<unsigned int> dist(1, std::numeric_limits<uint8_t>::max());
@@ -109,38 +119,25 @@ std::unique_ptr<ICommand> Process::createCommand(int type)
 		return std::make_unique<SleepCommand>(sleepTicks);
 	}
 	case ICommand::FOR: {
-		std::vector<std::unique_ptr<ICommand>> body;
-		int type, randTypeVal;
-		int randInsCount1, randInsCount2, randInsCount3;
-		const int NUM_TYPES = 6; // Adjust as needed: PRINT, DECLARE, ADD, etc. // 0-5
-
-		randInsCount1 = rand() % 5 + 1;
-
-		for (int i = 1; i <= randInsCount1; ++i) {
-			randTypeVal = rand() % NUM_TYPES;
-
-			if(randTypeVal == 5){
-				randInsCount2 = rand() % 5 + 1;
-				
-				for (int i = 1; i <= randInsCount2; ++i) {
-					randTypeVal = rand() % NUM_TYPES;
-					if (randTypeVal == 5){
-						randInsCount3 = rand() % 5 + 1;
-							
-						for (int i = 1; i <= randInsCount3; ++i) {
-							randTypeVal = rand() % (NUM_TYPES - 1);
-
-							body.push_back(createCommand(randTypeVal));
-						}
-					} else {
-						body.push_back(createCommand(randTypeVal));
-					}
-				}
-			} else{
-				body.push_back(createCommand(randTypeVal));
-			}
+		if (remaining < 2) {
+			return createCommand(remaining, depth);
 		}
+		
+		--remaining;
+
 		int repeatCount = rand() % 3 + 1;
+		std::vector<std::unique_ptr<ICommand>> body;
+
+		// Try to add as many subcommands as remaining allows
+		int maxBody = std::min(remaining, 3); // conservative
+		int numBodyCmds = std::min(remaining, rand() % 3 + 1);
+
+		for (int i = 0; i < numBodyCmds; ++i) {
+			auto subCmd = createCommand(remaining, depth + 1);
+			if (!subCmd) break;
+			body.push_back(std::move(subCmd));
+		}
+
 		return std::make_unique<ForCommand>(std::move(body), repeatCount);
 	}
 	default:

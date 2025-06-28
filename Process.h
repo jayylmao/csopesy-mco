@@ -79,7 +79,7 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
-	std::unique_ptr<ICommand> createCommand(int type);
+	std::unique_ptr<ICommand> createCommand(int& remaining, int depth);
 
 	/**
 	 * @brief Get a variable from the symbol table.
