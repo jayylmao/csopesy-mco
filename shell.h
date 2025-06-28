@@ -133,7 +133,7 @@ public:
     int getCores();
 
 private:
-    bool init; // System starts uninitialized at first.
+    bool init = false; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
     int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;

@@ -66,6 +66,7 @@ int Shell::getCores()
 }
 
 void Shell::initialize() {
+    init = true;
     // Reload configuration every time
     std::cout << "[i] Loading configuration..." << std::endl;
     configManager.loadConfig("config.txt");
@@ -109,9 +110,7 @@ void Shell::initialize() {
         }
     }
 
-    if (!init) {
-        init = true;
-
+    if (init) {
         // Create scheduler based on config
         std::string schedulerType;
         bool validScheduler = false;
@@ -565,7 +564,7 @@ void Shell::prompt()
 
     // Block other commands if not initialized
     if (!init) {
-        if (input_tokens[0] == "help" || input_tokens[0] == "exit") {
+        if (input_tokens[0] == "help" || input_tokens[0] == "exit" || input_tokens[0] == "clear") {
             // Allow these commands
         }
         else {
