@@ -109,8 +109,8 @@ void Shell::initialize() {
         }
     }
 
-    if (init) {
-
+    if (!init) {
+        init = true;
         // Create scheduler based on config
         std::string schedulerType;
         bool validScheduler = false;
