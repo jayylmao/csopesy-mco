@@ -130,17 +130,17 @@ void Shell::initialize() {
                 bool validQuantum = true;
 
                 // Check for time quantum configuration
-                if (config.find("time_quantum") != config.end()) {
+                if (config.find("quantum-cycles") != config.end()) {
                     try {
-                        quantum = std::stoi(config.at("time_quantum"));
+                        quantum = std::stoi(config.at("quantum-cycles"));
                         if (quantum <= 0) {
-                            std::cerr << "[!] Invalid time_quantum value ("
+                            std::cerr << "[!] Invalid quantum-cycles value ("
                                 << quantum << "). Must be positive integer. Using default (5)" << std::endl;
                             validQuantum = false;
                         }
                     }
                     catch (...) {
-                        std::cerr << "[!] Invalid time_quantum value. Using default (5)" << std::endl;
+                        std::cerr << "[!] Invalid quantum-cycles value. Using default (5)" << std::endl;
                         validQuantum = false;
                     }
                 }
