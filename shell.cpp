@@ -1,5 +1,4 @@
 #include "shell.h"
-#include "AConsole.h"
 #include "ScreenCommands.h"
 #include "Marquee.h"
 
@@ -231,7 +230,7 @@ void Shell::screen(std::vector<std::string> args)
         //simulated total lines
         processManager.createProcess(processName, randomNumber());
 
-        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
+        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processName);
 
         // Use the scheduler interface instead of concrete class
         if (scheduler) {
@@ -244,11 +243,8 @@ void Shell::screen(std::vector<std::string> args)
 
         int pid = processManager.getNextPID() - 1;
         auto screen = std::make_shared<ScreenS>(processName, pid, &processManager);
-        ConsoleManager::getInstance()->addConsole(processName, screen);
         screen->onEnabled();
-        //clear();
-        std::system("cls");
-        printHeader();
+        clear();
     }
 
     else if (args[0] == "-r") { // SCREEN -R
@@ -256,47 +252,30 @@ void Shell::screen(std::vector<std::string> args)
             std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
             return;
         }
-
+        
+        std::system("cls");
         std::string processName = args[1];
-        std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
 
-        // If no console exists for this process name, check if a process exists in ProcessManager
-        if (!console) 
+        std::vector<Process*> processes = processManager.listProcesses();
+        Process* found = nullptr;
+        int pid = -1, totalLines = 0;
+
+        for (auto* p : processes) 
         {
-            std::vector<Process*> processes = processManager.listProcesses();
-            Process* found = nullptr;
-            int pid = -1, totalLines = 0;
-
-            for (auto* p : processes) 
+            if (p->getName() == processName) 
             {
-                if (p->getName() == processName) 
-                {
-                    found = p;
-                    pid = p->getPID();
-                    totalLines = p->getTotalLines();
-                    break;
-                }
-            }
-
-            if (found) 
-            {
-                auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
-                ConsoleManager::getInstance()->addConsole(processName, screenConsole);
-                console = screenConsole;
+                found = p;
+                pid = p->getPID();
+                totalLines = p->getTotalLines();
+                break;
             }
         }
 
-
-        if (console)
+        if (found) 
         {
-            std::system("cls");
-            console->onEnabled();
-            std::system("cls");
-            printHeader();
-        }
-        else 
-        {
-            std::cout << "[*] No process with name '" << processName << "' found.\n";
+            auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
+            screenConsole->onEnabled();
+            clear();
         }
         return;
     }
@@ -421,7 +400,7 @@ void Shell::schedulerStart()
             int totalLines = randomNumber(); //random per process
 
             processManager.createProcess(name, totalLines);
-            std::shared_ptr<Process> proc = processManager.getSharedProcess(processManager.getNextPID() - 1);
+            std::shared_ptr<Process> proc = processManager.getSharedProcess(name);
 
             if (scheduler) {
                 scheduler->addProcess(proc);

@@ -6,14 +6,14 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(main main.cpp
         shell.cpp
         shell.h 
-        "AConsole.h" 
-        "AConsole.cpp"
+         
+        
         "AddCommand.h"
         "AddCommand.cpp"
         "ConfigManager.h"
         "ConfigManager.cpp"
-        "ConsoleManager.cpp" 
-        "ConsoleManager.h" 
+         
+         
         "DeclareCommand.cpp"
         "DeclareCommand.h"
         "FCFSScheduler.h"
