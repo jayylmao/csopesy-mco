@@ -1,5 +1,13 @@
 #include "Marquee.h"
 
+#include <cstdlib>
+#include <iostream>
+#include <windows.h>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <conio.h>
+
 std::string currentInput = "";
 std::mutex MarqueeMutex;
 std::vector<std::string> commandHistory;

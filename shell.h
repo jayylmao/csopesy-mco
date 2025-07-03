@@ -1,13 +1,14 @@
 #pragma once
-#include "ProcessManager.h"
-#include "ConfigManager.h"
-#include "IScheduler.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
-
 #include <string>
 #include <atomic>
 #include <vector>
+#include <memory>
+#include <thread>
+
+#include "ProcessManager.h"
+#include "ConfigManager.h"
+
+class IScheduler;
 
 /**
  * @class Shell

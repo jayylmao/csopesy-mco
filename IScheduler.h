@@ -3,7 +3,8 @@
 #define ISCHEDULER_H
 
 #include <memory>
-#include "Process.h"
+
+class Process;
 
 class IScheduler {
 public:

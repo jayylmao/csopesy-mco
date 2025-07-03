@@ -1,15 +1,11 @@
 #pragma once
-#include "Process.h"
-#include "ICommand.h"
 #include "IScheduler.h"
 #include <vector>
 #include <queue>
-#include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <memory>
-#include <iostream>
-#include <chrono>
+
+class Process;
+class ICommand;
 
 class RoundRobinScheduler : public IScheduler {
 public:

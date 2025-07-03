@@ -1,21 +1,21 @@
 #include "shell.h"
 #include "ScreenCommands.h"
 #include "Marquee.h"
+#include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
+#include "IScheduler.h"
+#include "Process.h"
 
 #include <chrono>
 #include <iostream>
-#include <thread>
 #include <fstream>
-#include <algorithm>
-#include <cstdlib>
-#include <memory>
 #include <random>
-#include <time.h>
 
-Shell::Shell() :
+Shell::Shell():
     init(false),
     quit(false),
     focusedPID(0),
+    cores(4),
     scheduler(nullptr),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle

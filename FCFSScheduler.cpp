@@ -1,8 +1,11 @@
 #include "FCFSScheduler.h"
+#include "Process.h"
+
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <string> 
+#include <mutex>
 
 FCFSScheduler::FCFSScheduler(int cores)
     : stop(false)

@@ -1,9 +1,10 @@
 #pragma once
-#include "Process.h"
 #include <map>
 #include <vector>
 #include <mutex>
 #include <stdexcept>
+
+class Process;
 
 /**
  * @class ProcessManager

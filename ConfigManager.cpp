@@ -1,22 +1,12 @@
 #include "ConfigManager.h"
 #include <fstream>
 #include <iostream>
-#include <cctype> // for isspace
-
-#ifdef _WIN32
-#include <direct.h> // for _getcwd
-#else
-#include <unistd.h> // for getcwd
-#endif
+#include <direct.h>
 
 void ConfigManager::loadConfig(const std::string& filename) {
     // Get current working directory
     char buffer[FILENAME_MAX];
-#ifdef _WIN32
     if (_getcwd(buffer, FILENAME_MAX)) {
-#else
-    if (getcwd(buffer, FILENAME_MAX)) {
-#endif
         std::cout << "[i] Current working directory: " << buffer << std::endl;
     }
     else {

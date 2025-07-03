@@ -1,5 +1,17 @@
+#include "PrintCommand.h"
+#include "DeclareCommand.h"
+#include "AddCommand.h"
+#include "SubtractCommand.h"
+#include "SleepCommand.h"
+#include "ForCommand.h"
 #include "Process.h"
-#include <limits>
+
+#include <ctime>
+#include <random>
+#include <iterator>
+#include <stdexcept>
+#include <sstream>
+#include <chrono>
 
 Process::Process(const std::string& name, int pid, int instructionCount)
 	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false)

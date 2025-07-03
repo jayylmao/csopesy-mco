@@ -1,5 +1,6 @@
 #include "ForCommand.h"
-#include "Process.h"
+
+#include <stdexcept>
 
 ForCommand::ForCommand(std::vector<std::unique_ptr<ICommand>> instructions, int repeats)
 	: ICommand(Type::FOR), repeats(repeats), instructions(std::move(instructions)) {

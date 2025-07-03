@@ -1,9 +1,7 @@
 #pragma once
 #include "ICommand.h"
-#include "Process.h"
-#include <iostream>
-#include <thread>
-#include <chrono>
+
+class Process;
 
 class SleepCommand : public ICommand {
 public:

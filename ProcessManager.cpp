@@ -1,4 +1,5 @@
 #include "ProcessManager.h"
+#include "Process.h"
 
 int ProcessManager::nextPID = 1;
 

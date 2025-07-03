@@ -1,4 +1,11 @@
 #include "RoundRobinScheduler.h"
+#include "Process.h"
+#include "ICommand.h"
+
+#include <thread>
+#include <memory>
+#include <iostream>
+#include <chrono>
 
 RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum)
     : numCores(coreCount), timeQuantum(timeQuantum) {
