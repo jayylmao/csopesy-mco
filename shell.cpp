@@ -108,6 +108,20 @@ void Shell::initialize() {
         }
     }
 
+    if (config.find("delay-per-exec") != config.end()) {
+        try {
+            std::cout << "delay per instruction execution: " << std::stoi(config.at("delay-per-exec")) << std::endl;
+            delayPerExec = std::stoi(config.at("delay-per-exec"));
+            if (delayPerExec < 0 || delayPerExec > 4294967296) {
+                std::cerr << "[!] Invalid delay-per-exec value (" << delayPerExec << "). Using default (100)." << std::endl;
+                delayPerExec = 100;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid delay-per-exec value. Using default ()." << std::endl;
+        }
+    }
+
     if (!init) {
         init = true;
         // Create scheduler based on config
@@ -390,9 +404,6 @@ void Shell::schedulerStart()
     // Start batch processing
     batchProcessActive = true;
     batchThread = std::thread([this]() {
-
-		
-
         int counter = 0;
         while (batchProcessActive) {
             // Create new batch process
@@ -408,13 +419,12 @@ void Shell::schedulerStart()
             }
 
             // CORRECTED: Generate batchFreq processes per CPU cycle
-            // Each instruction = 100ms, so time between processes = 100ms / batchFreq
-            int sleep_time = 100 / batchFreq;
+            int sleep_time = delayPerExec / batchFreq;
             if (sleep_time <= 0) sleep_time = 1; // Ensure minimum sleep time
 
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         }
-        });
+    });
 
     std::cout << "[i] Batch processing started (frequency: "
         << batchFreq << " processes per CPU cycle)" << std::endl;
