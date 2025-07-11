@@ -1,13 +1,13 @@
 #pragma once
-#include "Process.h"
 #include "IScheduler.h"
 #include <queue>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
 #include <atomic>
 #include <memory>
+#include <thread>
+#include <mutex>
+
+class Process;
 
 /**
  * @class FCFSScheduler

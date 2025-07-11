@@ -1,9 +1,10 @@
 #pragma once
-#include "Process.h"
 #include <map>
 #include <vector>
 #include <mutex>
 #include <stdexcept>
+
+class Process;
 
 /**
  * @class ProcessManager
@@ -12,28 +13,19 @@
 class ProcessManager {
 public:
 	// create type definition for table that tracks processes.
-	typedef std::map<int, std::shared_ptr<Process>> ProcessTable;
+	typedef std::map<std::string, std::shared_ptr<Process>> ProcessTable;
 
 	/**
 	 * @brief List all processes.
 	 * @return Vector containing pointers to all processes.
 	 */
 	std::vector<Process*> listProcesses();
-
-	/**
-	 * @brief Get a reference to a process from its unique ID.
-	 */
-	Process& getProcess(int pid);
-
-	/**	
-	 * @brief Get a process's name from its unique ID.
-	 */
-	std::string getProcessName(int pid);
 	
 	/**
-	 * @brief Get a shared pointer to a process from the process manager through its unique ID.
+	 * @brief Get a shared pointer to a process from the process manager through its name.
+	 * @return Shared pointer to a process of a given name.
 	 */
-	std::shared_ptr<Process> getSharedProcess(int pid);
+	std::shared_ptr<Process> getSharedProcess(std::string name);
 
 	int getNextPID();
 

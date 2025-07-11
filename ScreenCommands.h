@@ -1,17 +1,16 @@
 #pragma once
 #include "ProcessManager.h"
-#include "AConsole.h"
 #include <string>
 
 class ProcessManager;
 
-class ScreenS : public AConsole {
+class ScreenS {
 public:
     ScreenS(const std::string& processName, int pid, ProcessManager* pm);
 
-    void onEnabled() override;
-    void display() override;
-    void process() override;
+    void onEnabled();
+    void display();
+    void process();
 	void processSMI();//process SMI
 
     int getProcessID() const { return processID; }
@@ -20,6 +19,7 @@ public:
 private:
    // int currentLine;
     //int totalLineCount;
+    std::string processName;
     int processID;
     std::string creationTimestamp;
     ProcessManager* processManager;

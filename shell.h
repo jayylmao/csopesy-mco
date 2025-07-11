@@ -1,14 +1,14 @@
 #pragma once
-#include "ConsoleManager.h"
-#include "ProcessManager.h"
-#include "ConfigManager.h"
-#include "IScheduler.h"
-#include "FCFSScheduler.h"
-#include "RoundRobinScheduler.h"
-
 #include <string>
 #include <atomic>
 #include <vector>
+#include <memory>
+#include <thread>
+
+#include "ProcessManager.h"
+#include "ConfigManager.h"
+
+class IScheduler;
 
 /**
  * @class Shell
@@ -143,7 +143,7 @@ private:
     std::atomic<bool> batchProcessActive;  // Flag to control batch process generation
     std::thread batchThread;               // Thread for generating batch processes
     int batchFreq;                         // Frequency of batch process generation (CPU cycles)
-
+    int delayPerExec = 100;                // ms delay per instruction execution.
 
 	int minIns = 1;                        //default instructions for the config min-ins and max-ins
 	int maxIns = 2000;

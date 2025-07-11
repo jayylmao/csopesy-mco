@@ -1,14 +1,6 @@
 #pragma once
-#include <cstdlib>
 #include <string>
 #include <vector>
-
-#include <iostream>
-#include <windows.h>
-#include <chrono>
-#include <thread>
-#include <mutex>
-#include <conio.h>
 
 class Marquee {
 public:

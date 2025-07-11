@@ -1,32 +1,12 @@
 #pragma once
 #include "ICommand.h"
-#include "PrintCommand.h"
-#include "DeclareCommand.h"
-#include "AddCommand.h"
-#include "SubtractCommand.h"
-#include "SleepCommand.h"
-#include "ForCommand.h"
 
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <stdexcept>
-#include <chrono>
 #include <queue>
-#include <memory>
 #include <unordered_map>
+#include <memory>
 #include <mutex>
-#include <iomanip>  // for std::put_time
-#include <sstream>  // for std::ostringstream
-#include <cstdint>
-
-
-#include <cstdlib>  // for rand()
-#include <ctime>    // for seeding rand() if needed
-#include <iterator> // for std::advance
-#include <random>
-#include <cstdint>
-
 
 //forward declare 
 class PrintCommand;

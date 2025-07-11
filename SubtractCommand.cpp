@@ -1,8 +1,6 @@
 #include "SubtractCommand.h"
 #include "Process.h"
 #include <iostream>
-#include <limits>
-#include <cctype>
 
 SubtractCommand::SubtractCommand(const std::string& dest, const std::string& lhs, const std::string& rhs)
     : ICommand(Type::SUBTRACT), dest(dest), lhs(lhs), rhs(rhs) {

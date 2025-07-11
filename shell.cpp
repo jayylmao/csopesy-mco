@@ -1,22 +1,21 @@
 #include "shell.h"
-#include "AConsole.h"
 #include "ScreenCommands.h"
 #include "Marquee.h"
+#include "FCFSScheduler.h"
+#include "RoundRobinScheduler.h"
+#include "IScheduler.h"
+#include "Process.h"
 
 #include <chrono>
 #include <iostream>
-#include <thread>
 #include <fstream>
-#include <algorithm>
-#include <cstdlib>
-#include <memory>
 #include <random>
-#include <time.h>
 
-Shell::Shell() :
+Shell::Shell():
     init(false),
     quit(false),
     focusedPID(0),
+    cores(4),
     scheduler(nullptr),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
@@ -106,6 +105,20 @@ void Shell::initialize() {
         catch (...) {
             std::cerr << "[!] Invalid num-cores value. Using default (4)." << std::endl;
             cores = 4;
+        }
+    }
+
+    if (config.find("delay-per-exec") != config.end()) {
+        try {
+            std::cout << "delay per instruction execution: " << std::stoi(config.at("delay-per-exec")) << std::endl;
+            delayPerExec = std::stoi(config.at("delay-per-exec"));
+            if (delayPerExec < 0 || delayPerExec > 4294967296) {
+                std::cerr << "[!] Invalid delay-per-exec value (" << delayPerExec << "). Using default (100)." << std::endl;
+                delayPerExec = 100;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid delay-per-exec value. Using default ()." << std::endl;
         }
     }
 
@@ -231,7 +244,7 @@ void Shell::screen(std::vector<std::string> args)
         //simulated total lines
         processManager.createProcess(processName, randomNumber());
 
-        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processManager.getNextPID() - 1);
+        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processName);
 
         // Use the scheduler interface instead of concrete class
         if (scheduler) {
@@ -244,11 +257,8 @@ void Shell::screen(std::vector<std::string> args)
 
         int pid = processManager.getNextPID() - 1;
         auto screen = std::make_shared<ScreenS>(processName, pid, &processManager);
-        ConsoleManager::getInstance()->addConsole(processName, screen);
         screen->onEnabled();
-        //clear();
-        std::system("cls");
-        printHeader();
+        clear();
     }
 
     else if (args[0] == "-r") { // SCREEN -R
@@ -256,47 +266,30 @@ void Shell::screen(std::vector<std::string> args)
             std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
             return;
         }
-
+        
+        std::system("cls");
         std::string processName = args[1];
-        std::shared_ptr<AConsole> console = ConsoleManager::getInstance()->getConsole(processName);
 
-        // If no console exists for this process name, check if a process exists in ProcessManager
-        if (!console) 
+        std::vector<Process*> processes = processManager.listProcesses();
+        Process* found = nullptr;
+        int pid = -1, totalLines = 0;
+
+        for (auto* p : processes) 
         {
-            std::vector<Process*> processes = processManager.listProcesses();
-            Process* found = nullptr;
-            int pid = -1, totalLines = 0;
-
-            for (auto* p : processes) 
+            if (p->getName() == processName) 
             {
-                if (p->getName() == processName) 
-                {
-                    found = p;
-                    pid = p->getPID();
-                    totalLines = p->getTotalLines();
-                    break;
-                }
-            }
-
-            if (found) 
-            {
-                auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
-                ConsoleManager::getInstance()->addConsole(processName, screenConsole);
-                console = screenConsole;
+                found = p;
+                pid = p->getPID();
+                totalLines = p->getTotalLines();
+                break;
             }
         }
 
-
-        if (console)
+        if (found) 
         {
-            std::system("cls");
-            console->onEnabled();
-            std::system("cls");
-            printHeader();
-        }
-        else 
-        {
-            std::cout << "[*] No process with name '" << processName << "' found.\n";
+            auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
+            screenConsole->onEnabled();
+            clear();
         }
         return;
     }
@@ -411,9 +404,6 @@ void Shell::schedulerStart()
     // Start batch processing
     batchProcessActive = true;
     batchThread = std::thread([this]() {
-
-		
-
         int counter = 0;
         while (batchProcessActive) {
             // Create new batch process
@@ -421,7 +411,7 @@ void Shell::schedulerStart()
             int totalLines = randomNumber(); //random per process
 
             processManager.createProcess(name, totalLines);
-            std::shared_ptr<Process> proc = processManager.getSharedProcess(processManager.getNextPID() - 1);
+            std::shared_ptr<Process> proc = processManager.getSharedProcess(name);
 
             if (scheduler) {
                 scheduler->addProcess(proc);
@@ -429,13 +419,12 @@ void Shell::schedulerStart()
             }
 
             // CORRECTED: Generate batchFreq processes per CPU cycle
-            // Each instruction = 100ms, so time between processes = 100ms / batchFreq
-            int sleep_time = 100 / batchFreq;
+            int sleep_time = delayPerExec / batchFreq;
             if (sleep_time <= 0) sleep_time = 1; // Ensure minimum sleep time
 
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         }
-        });
+    });
 
     std::cout << "[i] Batch processing started (frequency: "
         << batchFreq << " processes per CPU cycle)" << std::endl;
