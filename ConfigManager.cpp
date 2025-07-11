@@ -66,7 +66,7 @@ void ConfigManager::loadConfig(const std::string& filename) {
 
         configValues[key] = value;
     }
-    }
+}
 
 const std::map<std::string, std::string>& ConfigManager::getConfig() const {
     return configValues;
