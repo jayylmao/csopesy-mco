@@ -37,4 +37,4 @@ add_executable(main main.cpp
         "SleepCommand.h"
         "SubtractCommand.cpp"
         "SubtractCommand.h"
- "ForCommand.cpp" "ForCommand.h")
+ "ForCommand.cpp" "ForCommand.h" "IMemoryAllocator.h" "FlatMemoryAllocator.cpp")
