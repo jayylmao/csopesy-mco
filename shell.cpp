@@ -123,7 +123,7 @@ void Shell::initialize() {
         }
     }
     
-    int maxMem;
+    int maxMem = 16384;
     if (config.find("max-overall-mem") != config.end()) {
         try {
             maxMem = std::stoi(config.at("max-overall-mem"));
@@ -131,16 +131,14 @@ void Shell::initialize() {
             
             if (maxMem < 64 || maxMem > 65536) {
                 std::cerr << "[!] Invalid max-overall-mem value (" << maxMem << "). Using default (16384)." << std::endl;
-                maxMem = 16384;
             }
         }
         catch (...) {
             std::cerr << "[!] Invalid max-overall-mem value (" << maxMem << "). Using default (16384)." << std::endl;
-            maxMem = 16384;
         }
     }
 
-    int memPerFrame;
+    int memPerFrame = 16;
     if (config.find("mem-per-frame") != config.end()) {
         try {
             memPerFrame = std::stoi(config.at("mem-per-frame"));
@@ -148,12 +146,10 @@ void Shell::initialize() {
 
             if (memPerFrame < 16 || memPerFrame > maxMem) {
                 std::cerr << "[!] Invalid mem-per-frame value (" << memPerFrame << "). Using default (16)." << std::endl;
-                memPerFrame = 16;
             }
         }
         catch (...) {
             std::cerr << "[!] Invalid mem-per-frame value (" << memPerFrame << "). Using default (16)." << std::endl;
-            memPerFrame = 16;
         }
     }
 
