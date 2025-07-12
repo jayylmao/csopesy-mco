@@ -1,5 +1,6 @@
 #pragma once
 #include "IScheduler.h"
+#include "IMemoryAllocator.h"
 #include <queue>
 #include <vector>
 #include <atomic>
@@ -15,7 +16,7 @@ class Process;
  */
 class FCFSScheduler : public IScheduler {
 public:
-    FCFSScheduler(int cores);
+    FCFSScheduler(int cores, int maxMemory, int memPerFrame);
     ~FCFSScheduler();
 
     /**
@@ -44,6 +45,11 @@ private:
     std::condition_variable cv;
 
     std::atomic<bool> stop;
+
+    int maxMemory;
+    int memPerFrame;
+
+    std::unique_ptr<IMemoryAllocator> memoryManager;
 
     /**
      * @brief Worker thread loop for each CPU core.

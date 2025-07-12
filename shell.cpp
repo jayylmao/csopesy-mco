@@ -119,6 +119,41 @@ void Shell::initialize() {
         }
         catch (...) {
             std::cerr << "[!] Invalid delay-per-exec value. Using default ()." << std::endl;
+            delayPerExec = 100;
+        }
+    }
+    
+    int maxMem;
+    if (config.find("max-overall-mem") != config.end()) {
+        try {
+            maxMem = std::stoi(config.at("max-overall-mem"));
+            std::cout << "maximum memory: " << maxMem << " kb" << std::endl;
+            
+            if (maxMem < 64 || maxMem > 65536) {
+                std::cerr << "[!] Invalid max-overall-mem value (" << maxMem << "). Using default (16384)." << std::endl;
+                maxMem = 16384;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid max-overall-mem value (" << maxMem << "). Using default (16384)." << std::endl;
+            maxMem = 16384;
+        }
+    }
+
+    int memPerFrame;
+    if (config.find("mem-per-frame") != config.end()) {
+        try {
+            memPerFrame = std::stoi(config.at("mem-per-frame"));
+            std::cout << "memory per frame: " << memPerFrame << " kb" << std::endl;
+
+            if (memPerFrame < 16 || memPerFrame > maxMem) {
+                std::cerr << "[!] Invalid mem-per-frame value (" << memPerFrame << "). Using default (16)." << std::endl;
+                memPerFrame = 16;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid mem-per-frame value (" << memPerFrame << "). Using default (16)." << std::endl;
+            memPerFrame = 16;
         }
     }
 
@@ -132,10 +167,9 @@ void Shell::initialize() {
         if (config.find("scheduler") != config.end()) {
             schedulerType = config.at("scheduler");
 
-
             if (schedulerType == "fcfs" || schedulerType == "FCFS") {
                 std::cout << "[i] Using FCFS scheduler with " << cores << " cores" << std::endl;
-                scheduler = std::make_unique<FCFSScheduler>(cores);
+                scheduler = std::make_unique<FCFSScheduler>(cores, maxMem, memPerFrame);
                 validScheduler = true;
             }
             else if (schedulerType == "rr" || schedulerType == "RR") {
