@@ -27,6 +27,11 @@ public:
 	 */
 	std::shared_ptr<Process> getSharedProcess(std::string name);
 
+	/**
+	 * @brief Sets the amount of memory each process needs.
+	 */
+	void setMemPerProc(int mem);
+
 	int getNextPID();
 
 	/**
@@ -41,5 +46,5 @@ private:
 	ProcessTable processTable;
 	std::mutex processMutex;
 	static int nextPID;
-
+	int memPerProc;
 };

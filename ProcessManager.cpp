@@ -39,3 +39,8 @@ int ProcessManager::getNextPID()
 {
 	return this->nextPID;
 }
+
+void ProcessManager::setMemPerProc(int mem)
+{
+	this->memPerProc = mem;
+}

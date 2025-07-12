@@ -157,6 +157,25 @@ void Shell::initialize() {
         }
     }
 
+    int memPerProc;
+    if (config.find("mem-per-proc") != config.end()) {
+        try {
+            memPerProc = std::stoi(config.at("mem-per-proc"));
+            std::cout << "memory per process: " << memPerProc << " kb" << std::endl;
+
+            if (memPerProc < 16 || memPerProc > maxMem) {
+                std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
+                memPerProc = 4096;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
+            memPerProc = 4096;
+        }
+
+        processManager.setMemPerProc(memPerProc);
+    }
+
     if (!init) {
         init = true;
         // Create scheduler based on config
