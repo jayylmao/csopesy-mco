@@ -1,12 +1,14 @@
 #pragma once
 #include "ProcessManager.h"
 #include <string>
+#include <memory>
 
 class ProcessManager;
+class IMemoryAllocator;
 
 class ScreenS {
 public:
-    ScreenS(const std::string& processName, int pid, ProcessManager* pm);
+    ScreenS(const std::string& processName, int pid, ProcessManager* pm, std::shared_ptr<IMemoryAllocator> mm);
 
     void onEnabled();
     void display();
@@ -23,6 +25,7 @@ private:
     int processID;
     std::string creationTimestamp;
     ProcessManager* processManager;
+    std::shared_ptr<IMemoryAllocator> memoryManager;
 
     std::string getCurrentTimestamp();
 };

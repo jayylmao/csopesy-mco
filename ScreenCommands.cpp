@@ -1,6 +1,7 @@
 #include "Process.h"
 #include "ScreenCommands.h"
 #include "ProcessManager.h"
+#include "IMemoryAllocator.h"
 #include <iostream>
 #include <iomanip>
 #include <ctime>
@@ -8,10 +9,11 @@
 #include <thread>
 #include <chrono>
 
+
 std::mutex screenMutex;
 
-ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm)
-    : processName(processName), processID(pid), processManager(pm) {
+ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm, std::shared_ptr<IMemoryAllocator> mm)
+    : processName(processName), processID(pid), processManager(pm), memoryManager(mm) {
     creationTimestamp = getCurrentTimestamp();
 }
 
@@ -41,6 +43,7 @@ void ScreenS::display() {
         std::cout << "Lines of Code: " << totalLines << "\n";
         std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
         std::cout << "---------------------------\n";
+        std::cout << memoryManager->displayMemory();
     }
 }
 //NEW ONE

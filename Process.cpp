@@ -13,8 +13,8 @@
 #include <sstream>
 #include <chrono>
 
-Process::Process(const std::string& name, int pid, int instructionCount)
-	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false)
+Process::Process(const std::string& name, int pid, int instructionCount, int memory)
+	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false), memory(memory)
 {
 	// store creation timestamp.
 	auto now = std::chrono::system_clock::now();
@@ -222,4 +222,9 @@ uint16_t Process::getVar(std::string name)
 void Process::setVar(std::string name, uint16_t val)
 {
 	symbolTable[name] = val;
+}
+
+int Process::getMemory() const
+{
+	return this->memory;
 }

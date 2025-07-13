@@ -1,4 +1,5 @@
 #include "FlatMemoryAllocator.h"
+#include <iostream>
 
 void* FlatMemoryAllocator::allocate(size_t size)
 {

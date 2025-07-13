@@ -16,7 +16,7 @@ class Process;
  */
 class FCFSScheduler : public IScheduler {
 public:
-    FCFSScheduler(int cores, int maxMemory, int memPerFrame);
+    FCFSScheduler(int cores, std::shared_ptr<IMemoryAllocator> memoryManager);
     ~FCFSScheduler();
 
     /**
@@ -45,11 +45,7 @@ private:
     std::condition_variable cv;
 
     std::atomic<bool> stop;
-
-    int maxMemory;
-    int memPerFrame;
-
-    std::unique_ptr<IMemoryAllocator> memoryManager;
+    std::shared_ptr<IMemoryAllocator> memoryManager;
 
     /**
      * @brief Worker thread loop for each CPU core.

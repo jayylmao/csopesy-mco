@@ -1,6 +1,7 @@
 #include "IMemoryAllocator.h"
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 
 /**
  * @class FlatMemoryAllocator
@@ -10,7 +11,7 @@ class FlatMemoryAllocator : public IMemoryAllocator {
 public:
 	// reserve actual memory for vector representation of memory and initialize.
 	FlatMemoryAllocator(size_t maxSize) : maxSize(maxSize), allocatedSize(0) {
-		memory.reserve(maxSize);
+		memory.resize(maxSize);
 		init();
 	}
 

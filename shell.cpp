@@ -5,11 +5,13 @@
 #include "RoundRobinScheduler.h"
 #include "IScheduler.h"
 #include "Process.h"
+#include "FlatMemoryAllocator.h"
 
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <memory>
 
 Shell::Shell():
     init(false),
@@ -17,6 +19,7 @@ Shell::Shell():
     focusedPID(0),
     cores(4),
     scheduler(nullptr),
+    delayPerExec(100),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
 {
@@ -123,7 +126,7 @@ void Shell::initialize() {
         }
     }
     
-    int maxMem = 16384;
+    maxMem = 16384;
     if (config.find("max-overall-mem") != config.end()) {
         try {
             maxMem = std::stoi(config.at("max-overall-mem"));
@@ -138,7 +141,7 @@ void Shell::initialize() {
         }
     }
 
-    int memPerFrame = 16;
+    memPerFrame = 16;
     if (config.find("mem-per-frame") != config.end()) {
         try {
             memPerFrame = std::stoi(config.at("mem-per-frame"));
@@ -153,7 +156,7 @@ void Shell::initialize() {
         }
     }
 
-    int memPerProc;
+    memPerProc = 4096;
     if (config.find("mem-per-proc") != config.end()) {
         try {
             memPerProc = std::stoi(config.at("mem-per-proc"));
@@ -161,12 +164,10 @@ void Shell::initialize() {
 
             if (memPerProc < 16 || memPerProc > maxMem) {
                 std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
-                memPerProc = 4096;
             }
         }
         catch (...) {
             std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
-            memPerProc = 4096;
         }
 
         processManager.setMemPerProc(memPerProc);
@@ -177,6 +178,10 @@ void Shell::initialize() {
         // Create scheduler based on config
         std::string schedulerType;
         bool validScheduler = false;
+        
+        std::cout << "allocate " << maxMem << std::endl;
+        // TODO: replace with configurable one if needed.
+        memoryManager = std::make_shared<FlatMemoryAllocator>(maxMem);
 
         // Check if scheduler type is specified in config
         if (config.find("scheduler") != config.end()) {
@@ -184,7 +189,7 @@ void Shell::initialize() {
 
             if (schedulerType == "fcfs" || schedulerType == "FCFS") {
                 std::cout << "[i] Using FCFS scheduler with " << cores << " cores" << std::endl;
-                scheduler = std::make_unique<FCFSScheduler>(cores, maxMem, memPerFrame);
+                scheduler = std::make_unique<FCFSScheduler>(cores, memoryManager);
                 validScheduler = true;
             }
             else if (schedulerType == "rr" || schedulerType == "RR") {
@@ -216,7 +221,7 @@ void Shell::initialize() {
                         << " cores and default quantum (5)" << std::endl;
                 }
 
-                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
+                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, memoryManager);
                 validScheduler = true;
             }
         }
@@ -305,7 +310,7 @@ void Shell::screen(std::vector<std::string> args)
         }
 
         int pid = processManager.getNextPID() - 1;
-        auto screen = std::make_shared<ScreenS>(processName, pid, &processManager);
+        auto screen = std::make_shared<ScreenS>(processName, pid, &processManager, memoryManager);
         screen->onEnabled();
         clear();
     }
@@ -336,7 +341,7 @@ void Shell::screen(std::vector<std::string> args)
 
         if (found) 
         {
-            auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager);
+            auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager, memoryManager);
             screenConsole->onEnabled();
             clear();
         }

@@ -1,14 +1,15 @@
 #include "RoundRobinScheduler.h"
 #include "Process.h"
 #include "ICommand.h"
+#include "FlatMemoryAllocator.h"
 
 #include <thread>
 #include <memory>
 #include <iostream>
 #include <chrono>
 
-RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum)
-    : numCores(coreCount), timeQuantum(timeQuantum) {
+RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, std::shared_ptr<IMemoryAllocator> memoryManager)
+    : numCores(coreCount), timeQuantum(timeQuantum), memoryManager(memoryManager) {
 }
 
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
@@ -49,11 +50,18 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             process = readyQueue.front();
             readyQueue.pop();
         }
+        
+        void* memBlock = memoryManager->allocate(process->getMemory());
+
+        if (!memBlock) {
+            std::cerr << "Could not allocate memory." << std::endl;
+            continue;
+        }
 
         process->setCoreId(coreId);
         int pid = process->getPID();
         std::string name = process->getName();
-
+        
         int slice = 0;
         while (!process->hasFinished() && slice < timeQuantum) {
             process->executeInstruction();
@@ -65,6 +73,9 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             std::lock_guard<std::mutex> lock(queueMutex);
             readyQueue.push(process);
             cv.notify_one();
+        }
+        else {
+            memoryManager->deallocate(memBlock);
         }
     }
 }

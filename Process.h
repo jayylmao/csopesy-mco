@@ -17,7 +17,7 @@ class PrintCommand;
 class Process {
 	friend class PrintCommand;
 public:
-	Process(const std::string& name, int pid, int instructionCount);
+	Process(const std::string& name, int pid, int instructionCount, int memory);
 	
 	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
@@ -82,6 +82,8 @@ public:
 
 	int getTotalLines() const;
 
+	int getMemory() const;
+
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
@@ -92,6 +94,8 @@ private:
 
 	int coreId; // core that the process is running on.
 	bool finished; // flag that tracks whether the process has finished execution.
+
+	int memory; // amount of memory the process used.
 
 	std::unordered_map<std::string, uint16_t> symbolTable; // maps variable names to their value
 

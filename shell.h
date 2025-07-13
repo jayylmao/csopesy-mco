@@ -8,6 +8,7 @@
 #include "ProcessManager.h"
 #include "ConfigManager.h"
 
+class IMemoryAllocator;
 class IScheduler;
 
 /**
@@ -138,7 +139,6 @@ private:
     int focusedPID; // ID of focused process. The OS main menu is 0.
     int cores;
     int nextPID = 1;
-    std::unique_ptr<IScheduler> scheduler;
     // Added for batch processing
     std::atomic<bool> batchProcessActive;  // Flag to control batch process generation
     std::thread batchThread;               // Thread for generating batch processes
@@ -148,6 +148,12 @@ private:
 	int minIns = 1;                        //default instructions for the config min-ins and max-ins
 	int maxIns = 2000;
 
+    int maxMem;
+    int memPerFrame;
+    int memPerProc;
+
     ProcessManager processManager;
     ConfigManager configManager;
+    std::shared_ptr<IMemoryAllocator> memoryManager;
+    std::unique_ptr<IScheduler> scheduler;
 };

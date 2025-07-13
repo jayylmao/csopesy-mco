@@ -19,7 +19,7 @@ void ProcessManager::createProcess(const std::string& name, int instructionCount
 {
 	std::lock_guard<std::mutex> lock(processMutex);
 	int pid = nextPID++;
-	auto proc = std::make_shared<Process>(name, pid, instructionCount);
+	auto proc = std::make_shared<Process>(name, pid, instructionCount, memPerProc);
 	processTable.insert({ name, std::move(proc) });
 }
 

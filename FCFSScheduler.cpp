@@ -8,14 +8,12 @@
 #include <string> 
 #include <mutex>
 
-FCFSScheduler::FCFSScheduler(int cores, int maxMemory, int memPerFrame)
-    : stop(false), numCores(cores), maxMemory(maxMemory), memPerFrame(memPerFrame)
+FCFSScheduler::FCFSScheduler(int cores, std::shared_ptr<IMemoryAllocator> memoryManager)
+    : stop(false), numCores(cores), memoryManager(memoryManager)
 {
     // Ensure valid core count
     if (cores < 1 || cores > 128) cores = 4;
     numCores = cores;
-    
-    memoryManager = std::make_unique<FlatMemoryAllocator>(maxMemory);
 }
 
 FCFSScheduler::~FCFSScheduler()
