@@ -8,8 +8,12 @@
 #include <iostream>
 #include <chrono>
 
-RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, std::shared_ptr<IMemoryAllocator> memoryManager)
-    : numCores(coreCount), timeQuantum(timeQuantum), memoryManager(memoryManager) {
+#include <fstream>
+#include <ctime>
+#include <algorithm>
+
+RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<IMemoryAllocator> memoryManager)
+    : numCores(coreCount), timeQuantum(timeQuantum), snapshotInterval(snapshotInterval), memoryManager(memoryManager) {
 }
 
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
@@ -38,6 +42,14 @@ void RoundRobinScheduler::stopScheduler() {
     }
 }
 
+std::string RoundRobinScheduler::getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+    char buffer[100];
+    std::strftime(buffer, sizeof(buffer), "%m/%d/%Y, %I:%M:%S %p", std::localtime(&timeNow));
+    return std::string(buffer);
+}
+
 void RoundRobinScheduler::coreWorker(int coreId) {
     while (true) {
         std::shared_ptr<Process> process;
@@ -50,18 +62,21 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             process = readyQueue.front();
             readyQueue.pop();
         }
-        
-        void* memBlock = memoryManager->allocate(process->getMemory());
+
+        void* memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
 
         if (!memBlock) {
-            std::cerr << "Could not allocate memory." << std::endl;
+            //std::cerr << "Could not allocate memory for PID " << process->getPID() << "\n";
+            std::lock_guard<std::mutex> lock(queueMutex);
+            readyQueue.push(process);  // Put it back in the queue
+            cv.notify_one();
             continue;
         }
 
         process->setCoreId(coreId);
         int pid = process->getPID();
         std::string name = process->getName();
-        
+
         int slice = 0;
         while (!process->hasFinished() && slice < timeQuantum) {
             process->executeInstruction();
@@ -76,6 +91,43 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         }
         else {
             memoryManager->deallocate(memBlock);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(snapshotMutex);
+
+            // Only one core (e.g., core 0) updates and snapshots
+            if (coreId == 0) {
+
+                ++currentQuantum;
+                if (currentQuantum % snapshotInterval == 0) {
+                    std::ofstream file("memory_stamp_" + std::to_string(currentQuantum) + ".txt");
+                    file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
+                    file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
+                    file << "Total External fragmentation in KB: "
+                        << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
+
+                    auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
+                    if (!flatMem) {
+                        file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
+                        return;
+                    }
+
+                    auto blocks = flatMem->getBlocks();
+                    std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
+                        return (a.start + a.size) > (b.start + b.size);
+                        });
+
+                    file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
+                    for (const auto& block : blocks) {
+                        file << block.start + block.size << "\n";
+                        file << "P" << block.pid << "\n";
+                        file << block.start << "\n\n";
+                    }
+                    file << "----start---- = 0\n";
+                    file.close();
+                }
+            }
         }
     }
 }

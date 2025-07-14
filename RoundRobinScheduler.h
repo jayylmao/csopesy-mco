@@ -4,13 +4,14 @@
 #include <vector>
 #include <queue>
 #include <mutex>
+#include <atomic>
 
 class Process;
 class ICommand;
 
 class RoundRobinScheduler : public IScheduler {
 public:
-    RoundRobinScheduler(int coreCount, int timeQuantum, std::shared_ptr<IMemoryAllocator> memoryManager);
+    RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<IMemoryAllocator> memoryManager);
     void addProcess(std::shared_ptr<Process> process) override;
     void runScheduler() override;
     void stopScheduler() override;
@@ -20,8 +21,13 @@ private:
     int timeQuantum;
     bool stop = false;
 
+    int snapshotInterval;
+
     int maxMemory;
     int memPerFrame;
+
+    std::atomic<int> currentQuantum{ 0 };
+    std::mutex snapshotMutex;
 
     std::queue<std::shared_ptr<Process>> readyQueue;
     std::mutex queueMutex;
@@ -30,5 +36,8 @@ private:
 
     std::shared_ptr<IMemoryAllocator> memoryManager;
 
+
     void coreWorker(int coreId);
+
+    std::string getCurrentTimestamp();
 };

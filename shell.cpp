@@ -194,12 +194,14 @@ void Shell::initialize() {
             }
             else if (schedulerType == "rr" || schedulerType == "RR") {
                 int quantum = 5; // Default time quantum
+				int snapshotInterval = 5; // Default snapshot value
                 bool validQuantum = true;
 
                 // Check for time quantum configuration
                 if (config.find("quantum-cycles") != config.end()) {
                     try {
                         quantum = std::stoi(config.at("quantum-cycles"));
+                        snapshotInterval = quantum;
                         if (quantum <= 0) {
                             std::cerr << "[!] Invalid quantum-cycles value ("
                                 << quantum << "). Must be positive integer. Using default (5)" << std::endl;
@@ -221,7 +223,7 @@ void Shell::initialize() {
                         << " cores and default quantum (5)" << std::endl;
                 }
 
-                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, memoryManager);
+                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, snapshotInterval, memoryManager);
                 validScheduler = true;
             }
         }
