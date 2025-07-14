@@ -40,7 +40,24 @@ void Process::executeInstruction()
 	}
 }
 
+<<<<<<< Updated upstream
 std::shared_ptr<ICommand> Process::createCommand(ICommand::Type type) {
+=======
+std::unique_ptr<ICommand> Process::createCommand(int& remaining, int depth)
+{
+	const int NUM_TYPES = 5; //change back to 6 if you want to include FOR command TODO
+	if (remaining <= 0) return nullptr;
+
+	int type;
+
+	if (depth >= 3) {
+		type = rand() % (NUM_TYPES - 1);
+	}
+	else {
+		type = rand() % NUM_TYPES;
+	}
+
+>>>>>>> Stashed changes
 	switch (type) {
 	case ICommand::PRINT:
 		return std::make_unique<PrintCommand>(pid);
