@@ -110,26 +110,22 @@ void Shell::initialize() {
             }
             else if (schedulerType == "rr" || schedulerType == "RR") {
                 int quantum = 5; // Default time quantum
-				int snapshotInterval = 5; // Default snapshot interval
+                int snapshotInterval = 5; // Default snapshot interval
                 bool validQuantum = true;
 
                 // Check for time quantum configuration
-                if (config.find("time_quantum") != config.end()) {
+                if (config.find("quantum-cycles") != config.end()) {
                     try {
-<<<<<<< Updated upstream
-                        quantum = std::stoi(config.at("time_quantum"));
-=======
                         quantum = std::stoi(config.at("quantum-cycles"));
                         snapshotInterval = quantum;
->>>>>>> Stashed changes
+
                         if (quantum <= 0) {
-                            std::cerr << "[!] Invalid time_quantum value ("
-                                << quantum << "). Must be positive integer. Using default (5)" << std::endl;
+                            std::cerr << "[!] Invalid quantum-cycles value (" << quantum << "). Must be positive integer. Using default (5)" << std::endl;
                             validQuantum = false;
                         }
                     }
                     catch (...) {
-                        std::cerr << "[!] Invalid time_quantum value. Using default (5)" << std::endl;
+                        std::cerr << "[!] Invalid quantum-cycles value. Using default (5)" << std::endl;
                         validQuantum = false;
                     }
                 }
@@ -143,14 +139,9 @@ void Shell::initialize() {
                         << " cores and default quantum (5)" << std::endl;
                 }
 
-<<<<<<< Updated upstream
-                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum);
-=======
                 scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, snapshotInterval, memoryManager);
->>>>>>> Stashed changes
                 validScheduler = true;
             }
-        }
 
         // Handle invalid/missing scheduler configuration
         if (!validScheduler) {

@@ -15,7 +15,6 @@ RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum)
 
 RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<IMemoryAllocator> memoryManager)
     : numCores(coreCount), timeQuantum(timeQuantum), snapshotInterval(snapshotInterval), memoryManager(memoryManager) {
->>>>>>> Stashed changes
 }
 
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
