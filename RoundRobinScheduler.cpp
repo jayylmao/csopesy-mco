@@ -19,7 +19,7 @@ RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int sna
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        readyQueue.push(process);
+        readyQueue.push_front(process);
     }
     cv.notify_one();
 }
@@ -51,7 +51,10 @@ std::string RoundRobinScheduler::getCurrentTimestamp() {
 }
 
 void RoundRobinScheduler::coreWorker(int coreId) {
+    void* memBlock;
+    
     while (true) {
+        timeQuantum++;
         std::shared_ptr<Process> process;
 
         {
@@ -60,15 +63,15 @@ void RoundRobinScheduler::coreWorker(int coreId) {
 
             if (stop && readyQueue.empty()) break;
             process = readyQueue.front();
-            readyQueue.pop();
+            readyQueue.pop_front();
+            memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
         }
 
-        void* memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
 
         if (!memBlock) {
             //std::cerr << "Could not allocate memory for PID " << process->getPID() << "\n";
             std::lock_guard<std::mutex> lock(queueMutex);
-            readyQueue.push(process);  // Put it back in the queue
+            readyQueue.push_back(process); // Put it back in the queue
             cv.notify_one();
             continue;
         }
@@ -86,22 +89,20 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         if (!process->hasFinished()) {
             process->setCoreId(-1);  // Reset core to "Pending"
             std::lock_guard<std::mutex> lock(queueMutex);
-            readyQueue.push(process);
+
+            readyQueue.push_back(process);
             cv.notify_one();
         }
         else {
-            memoryManager->deallocate(memBlock);
+            memoryManager->deallocate(process->getPID());
         }
 
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
 
-            // Only one core (e.g., core 0) updates and snapshots
             if (coreId == 0) {
-
-                ++currentQuantum;
-                if (currentQuantum % snapshotInterval == 0) {
-                    std::ofstream file("memory_stamp_" + std::to_string(currentQuantum) + ".txt");
+                if (timeQuantum % snapshotInterval == 0) {
+                    std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
                     file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
                     file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
                     file << "Total External fragmentation in KB: "

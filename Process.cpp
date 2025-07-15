@@ -144,10 +144,14 @@ std::unique_ptr<ICommand> Process::createCommand(int& remaining, int depth)
 		int maxBody = std::min(remaining, 3); // conservative
 		int numBodyCmds = std::min(remaining, rand() % 3 + 1);
 
-		for (int i = 0; i < numBodyCmds; ++i) {
+		for (int i = 0; i < numBodyCmds && remaining > 0; ++i) {
 			auto subCmd = createCommand(remaining, depth + 1);
 			if (!subCmd) break;
 			body.push_back(std::move(subCmd));
+		}
+
+		if (body.empty()) {
+			return createCommand(remaining, depth); // fallback to a non-FOR command
 		}
 
 		return std::make_unique<ForCommand>(std::move(body), repeatCount);

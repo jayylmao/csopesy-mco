@@ -38,9 +38,9 @@ public:
 
 	/**
 	 * @brief Deallocate a block of memory.
-	 * @param ptr Pointer to block to deallocate.
+	 * @param pid ID of process to deallocate.
 	 */
-	void deallocate(void* ptr) override;
+	void deallocate(int pid) override;
 
 	/**
 	 * @brief Display a visual representation of the memory.

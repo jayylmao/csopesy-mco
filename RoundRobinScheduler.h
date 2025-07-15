@@ -2,7 +2,7 @@
 #include "IScheduler.h"
 #include "IMemoryAllocator.h"
 #include <vector>
-#include <queue>
+#include <deque>
 #include <mutex>
 #include <atomic>
 
@@ -23,13 +23,10 @@ private:
 
     int snapshotInterval;
 
-    int maxMemory;
-    int memPerFrame;
-
     std::atomic<int> currentQuantum{ 0 };
     std::mutex snapshotMutex;
 
-    std::queue<std::shared_ptr<Process>> readyQueue;
+    std::deque<std::shared_ptr<Process>> readyQueue;
     std::mutex queueMutex;
     std::condition_variable cv;
     std::vector<std::thread> threads;

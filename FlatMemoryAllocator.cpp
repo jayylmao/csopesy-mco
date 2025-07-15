@@ -24,11 +24,18 @@ void* FlatMemoryAllocator::allocate(size_t size, int pid)
 	return nullptr;
 }
 
-void FlatMemoryAllocator::deallocate(void* ptr)
+void FlatMemoryAllocator::deallocate(int pid)
 {
-	size_t index = static_cast<char*>(ptr) - &memory[0];
-	if (allocationMap[index]) {
-		deallocateAt(index);
+	auto it = std::find_if(blocks.begin(), blocks.end(), [pid](const MemoryBlock& block) {
+		return block.pid == pid;
+	});
+
+	if (it != blocks.end()) {
+		for (size_t i = it->start; i < it->start + it->size; ++i) {
+			allocationMap[i] = false;
+		}
+		allocatedSize -= it->size;
+		blocks.erase(it);
 	}
 }
 
