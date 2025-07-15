@@ -20,6 +20,8 @@ void ForCommand::execute(Process& process) {
 			if (cmd) {
 				// Re-execute a clone of the command or re-run safely
 				cmd->execute(process);
+				
+				
 			}
 		}
 	}

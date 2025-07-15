@@ -5,30 +5,17 @@
 #include "AddCommand.h"
 #include "SubtractCommand.h"
 #include "SleepCommand.h"
-#include "ForCommand.h"
+// No need to include ForCommand.h anymore!
 
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <stdexcept>
-#include <chrono>
 #include <queue>
 #include <memory>
 #include <unordered_map>
 #include <mutex>
-#include <iomanip>  // for std::put_time
-#include <sstream>  // for std::ostringstream
 #include <cstdint>
+#include <sstream>
 
-
-#include <cstdlib>  // for rand()
-#include <ctime>    // for seeding rand() if needed
-#include <iterator> // for std::advance
-#include <random>
-#include <cstdint>
-
-
-//forward declare 
 class PrintCommand;
 /**
  * @class Process
@@ -38,11 +25,18 @@ class Process {
 	friend class PrintCommand;
 public:
 	Process(const std::string& name, int pid, int instructionCount);
-	
+
+	/// Instruction queue is always exactly totalInstructions, flat (no FORs)
 	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
-	
+
+	/// Fill the instruction queue with exactly totalInstructions instructions, flattening FORs
 	void createInstructions();
+
+	/**
+	 * @brief Helper to recursively flatten FOR-like logic into instructionQueue.
+	 */
+	void createFlatCommand(int& remaining, int depth);
 
 	/**
 	 * @brief Run one of the process's instructions.
@@ -79,8 +73,6 @@ public:
 	 */
 	std::string getCreationTimestamp();
 
-	std::unique_ptr<ICommand> createCommand(int& remaining, int depth);
-
 	/**
 	 * @brief Get a variable from the symbol table.
 	 * @param name Name of the variable.
@@ -102,6 +94,11 @@ public:
 
 	int getTotalLines() const;
 
+	/**
+	 * @brief Increment the executed instructions counter.
+	 */
+	//void incrementExecutedInstructions();
+
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
@@ -117,3 +114,4 @@ private:
 
 	mutable std::mutex mtx; // protects coreId and finished
 };
+

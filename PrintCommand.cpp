@@ -15,6 +15,6 @@ void PrintCommand::execute(Process& process) {
 		<< "[PID: " << process.pid << "] "
 		<< "Core: " << process.coreId << " "
 		<< msg;
-
+	//process.incrementExecutedInstructions();
 	process.logs.push_back(oss.str());
 }

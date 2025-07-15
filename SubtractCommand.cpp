@@ -17,7 +17,7 @@ void SubtractCommand::execute(Process& process) {
     uint16_t clampedResult = result < 0 ? 0 : static_cast<uint16_t>(result);
 
     process.setVar(dest, clampedResult);
-
+  //  process.incrementExecutedInstructions();
     /*std::string log = "SUB: " + dest + " = " + lhs + " - " + rhs +
         "-> " + std::to_string(leftVal) + " - " + std::to_string(rightVal) +
         " = " + std::to_string(clampedResult);*/

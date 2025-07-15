@@ -359,7 +359,16 @@ void Shell::outputProcessList(std::ostream& out)
     out << "Running processes" << std::endl;
     for (const auto& proc : processes) {
         if (!(proc->hasFinished())) {
-            std::string coreDisplay = (proc->getCoreId() == -1) ? "Pending" : std::to_string(proc->getCoreId());
+            std::string coreDisplay;
+            if (proc->getCoreId() == -1) {
+                coreDisplay = "Pending";
+            }
+            else {
+                coreDisplay = std::to_string(proc->getCoreId());
+                // Pad with spaces to match "Pending" (7 chars)
+                while (coreDisplay.length() < 7)
+                    coreDisplay += ' ';
+            }
             out << proc->getName() << " \t(" << proc->getCreationTimestamp()
                 << ")\tCore: " << coreDisplay << "\t" << proc->getCurrentLine() << "/" << proc->getTotalLines()
                 << std::endl;

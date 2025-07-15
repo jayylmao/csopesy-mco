@@ -9,6 +9,7 @@ AddCommand::AddCommand(const std::string& dest, const std::string& lhs, const st
 }
 
 void AddCommand::execute(Process& process) {
+   // process.incrementExecutedInstructions();
     uint16_t leftVal = resolveOperand(lhs, process);
     uint16_t rightVal = resolveOperand(rhs, process);
 
