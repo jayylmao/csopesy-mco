@@ -34,7 +34,7 @@ void RoundRobinScheduler::runScheduler() {
 void RoundRobinScheduler::quantumTracker() {
 
     while (!quantumStop) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Adjustable delay between cycles
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000)); // Adjustable delay between cycles
         int current = ++globalQuantumCounter;
 
         if (globalQuantumCounter % snapshotInterval == 0) {
