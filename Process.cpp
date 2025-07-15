@@ -41,18 +41,78 @@ Process::Process(const std::string& name, int pid, int instructionCount, int mem
 
 void Process::createInstructions()
 {
-	const int NUM_TYPES = 6; // Adjust as needed: PRINT, DECLARE, ADD, etc. // 0-5
-	int randVal;
-	int remainingInstructions = totalInstructions;
+	int remaining = totalInstructions;
+	while (remaining > 0) {
+		createFlatCommand(remaining, 0);
+	}
+}
 
-	while (remainingInstructions > 0) {
-		auto cmd = createCommand(remainingInstructions, 0);
-		
-		if (cmd) {
-			instructionQueue.push(std::move(cmd));
-		}
-		else {
+void Process::createFlatCommand(int& remaining, int depth)
+{
+	const int NUM_TYPES = 5; // Only basic commands (no FOR as an instruction)
+	if (remaining <= 0) return;
+
+	// At depth >= 3, just make basic commands
+	int type = rand() % (depth >= 3 ? NUM_TYPES : NUM_TYPES + 1); // NUM_TYPES + 1 allows chance of FOR at low depth
+
+	// 0: PRINT, 1: DECLARE, 2: ADD, 3: SUBTRACT, 4: SLEEP, 5: FOR (if allowed)
+	if (type < NUM_TYPES) {
+		switch (type) {
+		case ICommand::PRINT: {
+			--remaining;
+			std::string msg = "Hello world from " + this->name + "!";
+			instructionQueue.push(std::make_unique<PrintCommand>(msg));
 			break;
+		}
+		case ICommand::DECLARE: {
+			--remaining;
+			auto it = symbolTable.begin();
+			std::advance(it, rand() % symbolTable.size());
+			std::string varName = it->first;
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<uint16_t> dist(0, std::numeric_limits<uint16_t>::max());
+			uint16_t randomValue = dist(gen);
+			instructionQueue.push(std::make_unique<DeclareCommand>(varName, randomValue));
+			break;
+		}
+		case ICommand::ADD: {
+			--remaining;
+			std::vector<std::string> vars;
+			for (const auto& kv : symbolTable) vars.push_back(kv.first);
+			auto randomVar = [&]() { return vars[rand() % vars.size()]; };
+			instructionQueue.push(std::make_unique<AddCommand>(randomVar(), randomVar(), randomVar()));
+			break;
+		}
+		case ICommand::SUBTRACT: {
+			--remaining;
+			std::vector<std::string> vars;
+			for (const auto& kv : symbolTable) vars.push_back(kv.first);
+			auto randomVar = [&]() { return vars[rand() % vars.size()]; };
+			instructionQueue.push(std::make_unique<SubtractCommand>(randomVar(), randomVar(), randomVar()));
+			break;
+		}
+		case ICommand::SLEEP: {
+			--remaining;
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<unsigned int> dist(1, std::numeric_limits<uint8_t>::max());
+			uint8_t sleepTicks = static_cast<uint8_t>(dist(gen));
+			instructionQueue.push(std::make_unique<SleepCommand>(sleepTicks));
+			break;
+		}
+		}
+	}
+	else {
+		// Flatten FOR: repeat a block of commands
+		if (remaining < 2) return;
+		int repeatCount = rand() % 3 + 1; // 1-3
+		int bodyLen = std::min(remaining / repeatCount, 2); // limit the body size
+		if (bodyLen == 0) bodyLen = 1;
+		for (int r = 0; r < repeatCount && remaining > 0; ++r) {
+			for (int i = 0; i < bodyLen && remaining > 0; ++i) {
+				createFlatCommand(remaining, depth + 1);
+			}
 		}
 	}
 }
@@ -66,94 +126,12 @@ void Process::executeInstruction()
 
 		if (cmd) {
 			cmd->execute(*this);
+			//incrementExecutedInstructions();
 		}
 
 		if (instructionQueue.empty()) {
 			finished = true;
 		}
-	}
-}
-
-std::unique_ptr<ICommand> Process::createCommand(int& remaining, int depth)
-{
-	const int NUM_TYPES = 6;
-	if (remaining <= 0) return nullptr;
-
-	int type;
-
-	if (depth >= 3) {
-		type = rand() % (NUM_TYPES - 1);
-	}
-	else {
-		type = rand() % NUM_TYPES;
-	}
-
-	switch (type) {
-	case ICommand::PRINT: {
-		--remaining;
-		std::string msg = "Hello world from " + this->name + "!";
-		return std::make_unique<PrintCommand>(msg);
-	}
-	case ICommand::DECLARE:{
-		--remaining;
-		auto it = symbolTable.begin();
-		std::advance(it, rand() % symbolTable.size());
-
-		std::string varName = it->first;
-
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<uint16_t> dist(0, std::numeric_limits<uint16_t>::max());
-
-		uint16_t randomValue = dist(gen);
-
-		return std::make_unique<DeclareCommand>(varName, randomValue);
-	}
-	case ICommand::ADD:
-	case ICommand::SUBTRACT: {
-		--remaining;
-		std::vector<std::string> vars;
-		for (const auto& kv : symbolTable) vars.push_back(kv.first);
-		auto randomVar = [&]() { return vars[rand() % vars.size()]; };
-
-		if (type == ICommand::ADD)
-			return std::make_unique<AddCommand>(randomVar(), randomVar(), randomVar());
-		else
-			return std::make_unique<SubtractCommand>(randomVar(), randomVar(), randomVar());
-	}
-	case ICommand::SLEEP:{
-		--remaining;
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<unsigned int> dist(1, std::numeric_limits<uint8_t>::max());
-		
-		uint8_t sleepTicks = static_cast<uint8_t>(dist(gen));
-		return std::make_unique<SleepCommand>(sleepTicks);
-	}
-	case ICommand::FOR: {
-		if (remaining < 2) {
-			return createCommand(remaining, depth);
-		}
-		
-		--remaining;
-
-		int repeatCount = rand() % 3 + 1;
-		std::vector<std::unique_ptr<ICommand>> body;
-
-		// Try to add as many subcommands as remaining allows
-		int maxBody = std::min(remaining, 3); // conservative
-		int numBodyCmds = std::min(remaining, rand() % 3 + 1);
-
-		for (int i = 0; i < numBodyCmds; ++i) {
-			auto subCmd = createCommand(remaining, depth + 1);
-			if (!subCmd) break;
-			body.push_back(std::move(subCmd));
-		}
-
-		return std::make_unique<ForCommand>(std::move(body), repeatCount);
-	}
-	default:
-		throw std::invalid_argument("Unknown command type");
 	}
 }
 

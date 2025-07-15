@@ -25,6 +25,11 @@ public:
 	void createInstructions();
 
 	/**
+	 * @brief Helper to recursively flatten FOR-like logic into instructionQueue.
+	 */
+	void createFlatCommand(int& remaining, int depth);
+
+	/**
 	 * @brief Run one of the process's instructions.
 	 */
 	void executeInstruction();
