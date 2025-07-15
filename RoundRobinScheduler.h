@@ -19,12 +19,11 @@ public:
 private:
     int numCores;
     int timeQuantum;
-    int globalQuantumCounter = 0;
+    
     bool stop = false;
 
     int snapshotInterval;
 
-    std::atomic<int> currentQuantum{ 0 };
     std::mutex snapshotMutex;
 
     std::deque<std::shared_ptr<Process>> readyQueue;
@@ -38,4 +37,9 @@ private:
     void coreWorker(int coreId);
 
     std::string getCurrentTimestamp();
+
+    std::atomic<int> globalQuantumCounter{ 0 };
+    std::thread quantumThread;
+    std::atomic<bool> quantumStop{ false };
+    void quantumTracker();
 };
