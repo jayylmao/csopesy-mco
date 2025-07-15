@@ -19,6 +19,7 @@ public:
 private:
     int numCores;
     int timeQuantum;
+    int globalQuantumCounter = 0;
     bool stop = false;
 
     int snapshotInterval;

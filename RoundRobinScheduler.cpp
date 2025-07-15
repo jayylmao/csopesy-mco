@@ -86,23 +86,13 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             ++slice;
         }
 
-        if (!process->hasFinished()) {
-            process->setCoreId(-1);  // Reset core to "Pending"
-            std::lock_guard<std::mutex> lock(queueMutex);
-
-            readyQueue.push_back(process);
-            cv.notify_one();
-        }
-        else {
-            memoryManager->deallocate(process->getPID());
-        }
-
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
 
             if (coreId == 0) {
-                if (timeQuantum % snapshotInterval == 0) {
-                    std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
+                ++globalQuantumCounter;
+                if (globalQuantumCounter % snapshotInterval == 0) {
+                    std::ofstream file("memory_stamp_" + std::to_string(globalQuantumCounter) + ".txt");
                     file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
                     file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
                     file << "Total External fragmentation in KB: "
@@ -129,6 +119,17 @@ void RoundRobinScheduler::coreWorker(int coreId) {
                     file.close();
                 }
             }
+        }
+        
+        if (!process->hasFinished()) {
+            process->setCoreId(-1);  // Reset core to "Pending"
+            std::lock_guard<std::mutex> lock(queueMutex);
+
+            readyQueue.push_back(process);
+            cv.notify_one();
+        }
+        else {
+            memoryManager->deallocate(process->getPID());
         }
     }
 }
