@@ -28,18 +28,62 @@ void RoundRobinScheduler::runScheduler() {
     for (int i = 0; i < numCores; ++i) {
         threads.emplace_back(&RoundRobinScheduler::coreWorker, this, i);
     }
+    quantumThread = std::thread(&RoundRobinScheduler::quantumTracker, this);
+}
+
+void RoundRobinScheduler::quantumTracker() {
+
+    while (!quantumStop) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000)); // Adjustable delay between cycles
+        int current = ++globalQuantumCounter;
+
+        if (globalQuantumCounter % snapshotInterval == 0) {
+            std::lock_guard<std::mutex> lock(snapshotMutex);
+            std::ofstream file("memory_stamp_" + std::to_string(globalQuantumCounter) + ".txt");
+
+            file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
+            file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
+            file << "Total External fragmentation in KB: "
+                << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
+
+            auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
+            if (!flatMem) {
+                file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
+                return;
+            }
+
+            auto blocks = flatMem->getBlocks();
+            std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
+                return (a.start + a.size) > (b.start + b.size);
+                });
+
+            file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
+            for (const auto& block : blocks) {
+                file << block.start + block.size << "\n";
+                file << "P" << block.pid << "\n";
+                file << block.start << "\n\n";
+            }
+            file << "----start---- = 0\n";
+            file.close();
+        }
+    }
 }
 
 void RoundRobinScheduler::stopScheduler() {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
         stop = true;
-    }
+       
+    } 
+    quantumStop = true;
+        
     cv.notify_all();
 
     for (auto& t : threads) {
         if (t.joinable()) t.join();
     }
+    
+    if (quantumThread.joinable()) quantumThread.join();
 }
 
 std::string RoundRobinScheduler::getCurrentTimestamp() {
@@ -54,6 +98,7 @@ void RoundRobinScheduler::coreWorker(int coreId) {
     void* memBlock;
     
     while (true) {
+        timeQuantum++;
         std::shared_ptr<Process> process;
 
         {
@@ -66,6 +111,7 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
         }
 
+        
 
         if (!memBlock) {
             //std::cerr << "Could not allocate memory for PID " << process->getPID() << "\n";
@@ -85,6 +131,8 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             ++slice;
         }
 
+  
+        
         if (!process->hasFinished()) {
             process->setCoreId(-1);  // Reset core to "Pending"
             std::lock_guard<std::mutex> lock(queueMutex);
@@ -94,41 +142,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         }
         else {
             memoryManager->deallocate(process->getPID());
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(snapshotMutex);
-
-            if (coreId == 0) {
-                timeQuantum++;
-                if (timeQuantum % snapshotInterval == 0) {
-                    std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
-                    file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
-                    file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
-                    file << "Total External fragmentation in KB: "
-                        << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
-
-                    auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
-                    if (!flatMem) {
-                        file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
-                        return;
-                    }
-
-                    auto blocks = flatMem->getBlocks();
-                    std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
-                        return (a.start + a.size) > (b.start + b.size);
-                        });
-
-                    file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
-                    for (const auto& block : blocks) {
-                        file << block.start + block.size << "\n";
-                        file << "P" << block.pid << "\n";
-                        file << block.start << "\n\n";
-                    }
-                    file << "----start---- = 0\n";
-                    file.close();
-                }
-            }
         }
     }
 }
