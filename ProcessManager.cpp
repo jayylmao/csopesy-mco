@@ -15,11 +15,19 @@ std::shared_ptr<Process> ProcessManager::getSharedProcess(std::string name)
 	return it->second;
 }
 
-void ProcessManager::createProcess(const std::string& name, int instructionCount)
+void ProcessManager::createProcess(const std::string& name, int instructionCount, int mem)
 {
 	std::lock_guard<std::mutex> lock(processMutex);
 	int pid = nextPID++;
-	auto proc = std::make_shared<Process>(name, pid, instructionCount, memPerProc);
+	auto proc = std::make_shared<Process>(name, pid, instructionCount, mem);
+	processTable.insert({ name, std::move(proc) });
+}
+
+void ProcessManager::createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions)
+{
+	std::lock_guard<std::mutex> lock(processMutex);
+	int pid = nextPID++;
+	auto proc = std::make_shared<Process>(name, pid, std::move(instructions));
 	processTable.insert({ name, std::move(proc) });
 }
 
@@ -40,7 +48,12 @@ int ProcessManager::getNextPID()
 	return this->nextPID;
 }
 
-void ProcessManager::setMemPerProc(int mem)
+void ProcessManager::setMinMemPerProc(int mem)
 {
-	this->memPerProc = mem;
+	this->minMemPerProc = mem;
+}
+
+void ProcessManager::setMaxMemPerProc(int mem)
+{
+	this->maxMemPerProc = mem;
 }

@@ -4,6 +4,7 @@
 #include <mutex>
 #include <stdexcept>
 
+class ICommand;
 class Process;
 
 /**
@@ -28,9 +29,14 @@ public:
 	std::shared_ptr<Process> getSharedProcess(std::string name);
 
 	/**
-	 * @brief Sets the amount of memory each process needs.
+	 * @brief Sets the minimum amount of memory each process needs.
 	 */
-	void setMemPerProc(int mem);
+	void setMinMemPerProc(int mem);
+	
+	/**
+	 * @brief Sets the maximum amount of memory each process needs.
+	 */
+	void setMaxMemPerProc(int mem);
 
 	int getNextPID();
 
@@ -40,11 +46,14 @@ public:
 	 * @param pid Unique ID of process.
 	 * @param instructionCount Number of instructions that process has.
 	 */
-	void createProcess(const std::string& name, int instructionCount);
+	void createProcess(const std::string& name, int instructionCount, int mem);
+
+	void createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions);
 
 private:
 	ProcessTable processTable;
 	std::mutex processMutex;
 	static int nextPID;
-	int memPerProc;
+	int minMemPerProc;
+	int maxMemPerProc;
 };

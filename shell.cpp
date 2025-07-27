@@ -20,6 +20,10 @@ Shell::Shell():
     cores(4),
     scheduler(nullptr),
     delayPerExec(100),
+    memPerFrame(16),
+    maxMem(16384),
+    minMemPerProc(64),
+    maxMemPerProc(16384),
     batchProcessActive(false),  // Initialize batch processing as inactive
     batchFreq(1)                // Default frequency: 1 CPU cycle
 {
@@ -156,21 +160,38 @@ void Shell::initialize() {
         }
     }
 
-    memPerProc = 4096;
-    if (config.find("mem-per-proc") != config.end()) {
+    minMemPerProc = 64;
+    if (config.find("min-mem-per-proc") != config.end()) {
         try {
-            memPerProc = std::stoi(config.at("mem-per-proc"));
-            std::cout << "memory per process: " << memPerProc << " kb" << std::endl;
+            minMemPerProc = std::stoi(config.at("min-mem-per-proc"));
+            std::cout << "minimum memory per process: " << minMemPerProc << " kb" << std::endl;
 
-            if (memPerProc < 16 || memPerProc > maxMem) {
-                std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
+            if (minMemPerProc < 64 || minMemPerProc > maxMem) {
+                std::cerr << "[!] Invalid min-mem-per-proc value (" << minMemPerProc << "). Using default (64)." << std::endl;
             }
         }
         catch (...) {
-            std::cerr << "[!] Invalid mem-per-proc value (" << memPerProc << "). Using default (4096)." << std::endl;
+            std::cerr << "[!] Invalid min-mem-per-proc value (" << minMemPerProc << "). Using default (64)." << std::endl;
         }
 
-        processManager.setMemPerProc(memPerProc);
+        processManager.setMinMemPerProc(minMemPerProc);
+    }
+    
+    maxMemPerProc = 65536;
+    if (config.find("max-mem-per-proc") != config.end()) {
+        try {
+            maxMemPerProc = std::stoi(config.at("max-mem-per-proc"));
+            std::cout << "maximum memory per process: " << maxMemPerProc << " kb" << std::endl;
+
+            if (maxMemPerProc < 64 || maxMemPerProc > maxMem) {
+                std::cerr << "[!] Invalid min-mem-per-proc value (" << maxMemPerProc << "). Using default (65536)." << std::endl;
+            }
+        }
+        catch (...) {
+            std::cerr << "[!] Invalid min-mem-per-proc value (" << maxMemPerProc << "). Using default (65536)." << std::endl;
+        }
+
+        processManager.setMaxMemPerProc(maxMemPerProc);
     }
 
     if (!init) {
@@ -285,20 +306,21 @@ void Shell::screen(std::vector<std::string> args)
         return;
     } // switch to list screen command.
     else if (args[0] == "-ls") { //SCREEN -LS
-        screenList();
+screenList();
         return;
     } // too many arguments given to screen.
 
     else if (args[0] == "-s") { //SCREEN - S
-        if (args.size() < 2) {
-            std::cout << "[*] You must provide a process name. Usage: screen -s <processname>" << std::endl;
+        if (args.size() < 3) {
+            std::cout << "[*] You must provide a process name. Usage: screen -s <processname> <memorysize>" << std::endl;
             return;
         }
         std::system("cls");
         std::string processName = args[1];
+        int memory = stoi(args[2]);
 
         //simulated total lines
-        processManager.createProcess(processName, randomNumber());
+        processManager.createProcess(processName, randomNumber(), memory);
 
         std::shared_ptr<Process> ptr = processManager.getSharedProcess(processName);
 
@@ -475,7 +497,7 @@ void Shell::schedulerStart()
             std::string name = "batch_" + std::to_string(counter++);
             int totalLines = randomNumber(); //random per process
 
-            processManager.createProcess(name, totalLines);
+            processManager.createProcess(name, totalLines, minMemPerProc); // NOTE: hardcoded to use the minimum memory per process.
             std::shared_ptr<Process> proc = processManager.getSharedProcess(name);
 
             if (scheduler) {

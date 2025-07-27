@@ -17,7 +17,9 @@ class PrintCommand;
 class Process {
 	friend class PrintCommand;
 public:
-	Process(const std::string& name, int pid, int instructionCount, int memory);
+	Process(const std::string& name, int pid, int instructionCount, int mem);
+
+	Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions);
 	
 	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
@@ -63,8 +65,6 @@ public:
 	 * @return String of process's formatted timestamp.
 	 */
 	std::string getCreationTimestamp();
-
-	std::unique_ptr<ICommand> createCommand(int& remaining, int depth);
 
 	/**
 	 * @brief Get a variable from the symbol table.

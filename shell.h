@@ -150,7 +150,8 @@ private:
 
     int maxMem;
     int memPerFrame;
-    int memPerProc;
+    int minMemPerProc;
+    int maxMemPerProc;
 
     ProcessManager processManager;
     ConfigManager configManager;

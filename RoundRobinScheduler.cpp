@@ -54,7 +54,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
     void* memBlock;
     
     while (true) {
-        timeQuantum++;
         std::shared_ptr<Process> process;
 
         {
@@ -101,6 +100,7 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             std::lock_guard<std::mutex> lock(snapshotMutex);
 
             if (coreId == 0) {
+                timeQuantum++;
                 if (timeQuantum % snapshotInterval == 0) {
                     std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
                     file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
