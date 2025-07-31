@@ -17,7 +17,7 @@ class IScheduler;
  */
 class Shell {
 public:
-    Shell();
+    Shell(int delayPerCycleMs = 0); //passes perCycleMs
     ~Shell();
     /**
      * @brief Print header and initialize operating system.
@@ -133,6 +133,8 @@ public:
      */
     int getCores();
 
+    
+
 private:
     bool init = false; // System starts uninitialized at first.
     bool quit; // Check if user requests operating system to shut down.
@@ -144,6 +146,8 @@ private:
     std::thread batchThread;               // Thread for generating batch processes
     int batchFreq;                         // Frequency of batch process generation (CPU cycles)
     int delayPerExec;                // ms delay per instruction execution.
+    int CPUcycle;               //cpu cycle counter      
+    int delayPerCycleMs; //ms delay to represent 1CPUcycle
 
 	int minIns = 1;                        //default instructions for the config min-ins and max-ins
 	int maxIns = 2000;
