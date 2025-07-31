@@ -18,7 +18,7 @@ public:
 		SLEEP,
 		FOR //5
 	};
-
+	static int PER_INSTRUCTION_DELAY_MS;
 	ICommand(Type type);
 	virtual ~ICommand() = default; // Add virtual destructor for proper cleanup
 	

@@ -1,7 +1,7 @@
 #include "ICommand.h"
 #include <chrono>
 #include <thread>
-
+int ICommand::PER_INSTRUCTION_DELAY_MS = 0;
 ICommand::ICommand(Type type) : type(type)
 {
 	// store creation timestamp.
@@ -21,7 +21,6 @@ ICommand::Type ICommand::getType() const
 
 void ICommand::execute(Process& process)
 {
-    constexpr int PER_INSTRUCTION_DELAY_MS = 100;
     std::this_thread::sleep_for(std::chrono::milliseconds(PER_INSTRUCTION_DELAY_MS));
 }
 
