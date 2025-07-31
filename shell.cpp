@@ -508,7 +508,7 @@ void Shell::schedulerStart()
             }
 
             // CORRECTED: Generate batchFreq processes per CPU cycle
-            int sleep_time = delayPerExec * batchFreq;
+            int sleep_time = std::max(1, delayPerExec) * batchFreq; 
             if (sleep_time <= 0) sleep_time = 1; // Ensure minimum sleep time
 
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));

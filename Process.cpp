@@ -77,7 +77,7 @@ void Process::createFlatCommand(int& remaining, int depth)
 
 	// At depth >= 3, just make basic commands
 	int type = rand() % (depth >= 3 ? NUM_TYPES : NUM_TYPES + 1); // NUM_TYPES + 1 allows chance of FOR at low depth
-
+	
 	// 0: PRINT, 1: DECLARE, 2: ADD, 3: SUBTRACT, 4: SLEEP, 5: FOR (if allowed)
 	if (type < NUM_TYPES) {
 		switch (type) {
