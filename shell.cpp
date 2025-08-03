@@ -13,7 +13,8 @@
 #include <random>
 #include <memory>
 
-Shell::Shell():
+Shell::Shell(int delayPerCycleMs):
+    delayPerCycleMs(delayPerCycleMs),
     init(false),
     quit(false),
     focusedPID(0),
@@ -478,6 +479,8 @@ int Shell::randomNumber()
 
 void Shell::schedulerStart()
 {
+    ICommand::PER_INSTRUCTION_DELAY_MS = delayPerExec;
+
     if (!init) {
         std::cout << "[!] The system has not been initialized. Please run 'initialize' first." << std::endl;
         return;
@@ -506,15 +509,16 @@ void Shell::schedulerStart()
             }
 
             // CORRECTED: Generate batchFreq processes per CPU cycle
-            int sleep_time = delayPerExec / batchFreq;
+            int sleep_time = delayPerCycleMs * batchFreq;
             if (sleep_time <= 0) sleep_time = 1; // Ensure minimum sleep time
+           
 
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         }
     });
 
     std::cout << "[i] Batch processing started (frequency: "
-        << batchFreq << " processes per CPU cycle)" << std::endl;
+        << batchFreq << " CPU cycles per process)" << std::endl;
 }
 
 void Shell::schedulerStop()

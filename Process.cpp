@@ -77,53 +77,53 @@ void Process::createFlatCommand(int& remaining, int depth)
 
 	// At depth >= 3, just make basic commands
 	int type = rand() % (depth >= 3 ? NUM_TYPES : NUM_TYPES + 1); // NUM_TYPES + 1 allows chance of FOR at low depth
-
+	
 	// 0: PRINT, 1: DECLARE, 2: ADD, 3: SUBTRACT, 4: SLEEP, 5: FOR (if allowed)
 	if (type < NUM_TYPES) {
 		switch (type) {
-		case ICommand::PRINT: {
-			--remaining;
-			std::string msg = "Hello world from " + this->name + "!";
-			instructionQueue.push(std::make_unique<PrintCommand>(msg));
-			break;
-		}
-		case ICommand::DECLARE: {
-			--remaining;
-			auto it = symbolTable.begin();
-			std::advance(it, rand() % symbolTable.size());
-			std::string varName = it->first;
-			std::random_device rd;
-			std::mt19937 gen(rd());
-			std::uniform_int_distribution<uint16_t> dist(0, std::numeric_limits<uint16_t>::max());
-			uint16_t randomValue = dist(gen);
-			instructionQueue.push(std::make_unique<DeclareCommand>(varName, randomValue));
-			break;
-		}
-		case ICommand::ADD: {
-			--remaining;
-			std::vector<std::string> vars;
-			for (const auto& kv : symbolTable) vars.push_back(kv.first);
-			auto randomVar = [&]() { return vars[rand() % vars.size()]; };
-			instructionQueue.push(std::make_unique<AddCommand>(randomVar(), randomVar(), randomVar()));
-			break;
-		}
-		case ICommand::SUBTRACT: {
-			--remaining;
-			std::vector<std::string> vars;
-			for (const auto& kv : symbolTable) vars.push_back(kv.first);
-			auto randomVar = [&]() { return vars[rand() % vars.size()]; };
-			instructionQueue.push(std::make_unique<SubtractCommand>(randomVar(), randomVar(), randomVar()));
-			break;
-		}
-		case ICommand::SLEEP: {
-			--remaining;
-			std::random_device rd;
-			std::mt19937 gen(rd());
-			std::uniform_int_distribution<unsigned int> dist(1, std::numeric_limits<uint8_t>::max());
-			uint8_t sleepTicks = static_cast<uint8_t>(dist(gen));
-			instructionQueue.push(std::make_unique<SleepCommand>(sleepTicks));
-			break;
-		}
+			case ICommand::PRINT: {
+				--remaining;
+				std::string msg = "Hello world from " + this->name + "!";
+				instructionQueue.push(std::make_unique<PrintCommand>(msg));
+				break;
+			}
+			case ICommand::DECLARE: {
+				--remaining;
+				auto it = symbolTable.begin();
+				std::advance(it, rand() % symbolTable.size());
+				std::string varName = it->first;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_int_distribution<uint16_t> dist(0, std::numeric_limits<uint16_t>::max());
+				uint16_t randomValue = dist(gen);
+				instructionQueue.push(std::make_unique<DeclareCommand>(varName, randomValue));
+				break;
+			}
+			case ICommand::ADD: {
+				--remaining;
+				std::vector<std::string> vars;
+				for (const auto& kv : symbolTable) vars.push_back(kv.first);
+				auto randomVar = [&]() { return vars[rand() % vars.size()]; };
+				instructionQueue.push(std::make_unique<AddCommand>(randomVar(), randomVar(), randomVar()));
+				break;
+			}
+			case ICommand::SUBTRACT: {
+				--remaining;
+				std::vector<std::string> vars;
+				for (const auto& kv : symbolTable) vars.push_back(kv.first);
+				auto randomVar = [&]() { return vars[rand() % vars.size()]; };
+				instructionQueue.push(std::make_unique<SubtractCommand>(randomVar(), randomVar(), randomVar()));
+				break;
+			}
+			case ICommand::SLEEP: {
+				--remaining;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_int_distribution<unsigned int> dist(1, std::numeric_limits<uint8_t>::max());
+				uint8_t sleepTicks = static_cast<uint8_t>(dist(gen));
+				instructionQueue.push(std::make_unique<SleepCommand>(sleepTicks));
+				break;
+			}
 		}
 	}
 	else {
