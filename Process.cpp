@@ -1,9 +1,13 @@
 #include "PrintCommand.h"
 #include "DeclareCommand.h"
 #include "AddCommand.h"
+#include "ReadCommand.h"
+#include "WriteCommand.h"
 #include "SubtractCommand.h"
 #include "SleepCommand.h"
 #include "ForCommand.h"
+#include "ReadCommand.h"
+#include "WriteCommand.h"
 #include "Process.h"
 
 #include <ctime>
@@ -230,17 +234,44 @@ int Process::getMemory() const
 	return this->memory;
 }
 
-void Process::setInstructions(const std::vector<std::string>& instructions) {
-	// Clear existing instructions
+void Process::setParsedInstructions(const std::vector<std::vector<std::string>>& instructions) {
+	// Clear any existing instructions
 	while (!instructionQueue.empty()) {
 		instructionQueue.pop();
 	}
 
-	// Placeholder implementation: Convert each string to a PrintCommand
-	for (const auto& inst : instructions) {
-		instructionQueue.push(std::make_unique<PrintCommand>("Executing: " + inst));
+	// Convert parsed instructions into ICommand objects
+	for (const auto& instrParts : instructions) {
+		if (instrParts.empty()) continue;
+
+		const std::string& command = instrParts[0];
+
+		// --- Command Factory Logic ---
+		if (command == "DECLARE" && instrParts.size() == 3) {
+			instructionQueue.push(std::make_unique<DeclareCommand>(instrParts[1], std::stoi(instrParts[2])));
+		}
+		else if (command == "PRINT" && instrParts.size() >= 2) {
+			// Handle quoted strings (e.g., PRINT "Hello")
+			std::string message;
+			for (size_t i = 1; i < instrParts.size(); ++i) {
+				if (i > 1) message += " ";
+				message += instrParts[i];
+			}
+			instructionQueue.push(std::make_unique<PrintCommand>(message));
+		}
+		else if (command == "ADD" && instrParts.size() == 4) {
+			instructionQueue.push(std::make_unique<AddCommand>(instrParts[1], instrParts[2], instrParts[3]));
+		}
+		else if (command == "WRITE" && instrParts.size() == 3) {
+			instructionQueue.push(std::make_unique<WriteCommand>(instrParts[1], instrParts[2]));
+		}
+		else if (command == "READ" && instrParts.size() == 3) {
+			instructionQueue.push(std::make_unique<ReadCommand>(instrParts[1], instrParts[2]));
+		}
+		else {
+			throw std::runtime_error("Invalid command or arguments: " + command);
+		}
 	}
 
-	// Update total instructions count
-	totalInstructions = instructions.size();
+	totalInstructions = instructionQueue.size();
 }

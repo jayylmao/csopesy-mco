@@ -380,81 +380,118 @@ screenList();
     }
 
     else if (args[0] == "-c") {
-        // Validate argument count
+        // Validate argument count (process_name, memory_size, instructions)
         if (args.size() < 4) {
-            std::cout << "[*] Usage: screen -c <process_name> <memory_size> \"<semicolon_separated_instructions>\"\n";
-            std::cout << "[*] Example: screen -c proc1 256 \"DECLARE var1 10; PRINT var1\"\n";
+            std::cerr << "[*] Usage: screen -c <process_name> <memory_size> \"<1-50 semicolon-separated instructions>\"\n";
+            std::cerr << "[*] Example: screen -c process2 256 \"DECLARE varA 10; ADD varA varB varC\"\n";
             return;
         }
 
-        std::string processName = args[1];
-        std::string memSizeStr = args[2];
+        // Extract arguments
+        const std::string& processName = args[1];
+        const std::string& memSizeStr = args[2];
 
-        // Reconstruct instruction string
+        // Reconstruct instruction string (handling quoted arguments)
         std::string instructionStr;
         for (size_t i = 3; i < args.size(); ++i) {
+            if (!instructionStr.empty()) instructionStr += " ";
             instructionStr += args[i];
-            if (i < args.size() - 1) instructionStr += " ";
         }
 
         // Remove surrounding quotes if present
-        if (instructionStr.size() >= 2 &&
-            instructionStr.front() == '"' &&
-            instructionStr.back() == '"') {
+        if (instructionStr.size() >= 2 && instructionStr.front() == '"' && instructionStr.back() == '"') {
             instructionStr = instructionStr.substr(1, instructionStr.size() - 2);
         }
 
-        // Split instructions by semicolon
-        std::vector<std::string> instructions;
-        std::istringstream iss(instructionStr);
-        std::string token;
-        while (std::getline(iss, token, ';')) {
-            // Trim whitespace
-            token.erase(0, token.find_first_not_of(" \t\n\r\f\v"));
-            token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
-            if (!token.empty()) {
-                instructions.push_back(token);
+        // --- Instruction Parsing ---
+        std::vector<std::vector<std::string>> parsedInstructions;
+        size_t semicolonPos = 0;
+        size_t startPos = 0;
+        bool inQuotes = false;
+
+        // Single-pass parsing with quote handling
+        for (; semicolonPos < instructionStr.size(); ++semicolonPos) {
+            char c = instructionStr[semicolonPos];
+            if (c == '"') inQuotes = !inQuotes;
+            if (c == ';' && !inQuotes) {
+                std::string instruction = instructionStr.substr(startPos, semicolonPos - startPos);
+                startPos = semicolonPos + 1;
+
+                // Trim whitespace
+                instruction.erase(0, instruction.find_first_not_of(" \t\n\r\f\v"));
+                instruction.erase(instruction.find_last_not_of(" \t\n\r\f\v") + 1);
+
+                if (!instruction.empty()) {
+                    // Split into command + args
+                    std::vector<std::string> parts;
+                    std::istringstream iss(instruction);
+                    std::string part;
+                    while (iss >> std::quoted(part)) {  // Handles quoted strings
+                        parts.push_back(part);
+                    }
+                    parsedInstructions.push_back(parts);
+                }
             }
         }
 
-        // Validate instruction count
-        if (instructions.empty() || instructions.size() > 50) {
-            std::cout << "[*] Invalid command: Requires 1-50 instructions\n";
+        // Add last instruction (if no trailing semicolon)
+        if (startPos < instructionStr.size()) {
+            std::string instruction = instructionStr.substr(startPos);
+            instruction.erase(0, instruction.find_first_not_of(" \t\n\r\f\v"));
+            instruction.erase(instruction.find_last_not_of(" \t\n\r\f\v") + 1);
+
+            if (!instruction.empty()) {
+                std::vector<std::string> parts;
+                std::istringstream iss(instruction);
+                std::string part;
+                while (iss >> std::quoted(part)) {
+                    parts.push_back(part);
+                }
+                parsedInstructions.push_back(parts);
+            }
+        }
+
+        // Validate instruction count (1-50)
+        if (parsedInstructions.empty() || parsedInstructions.size() > 50) {
+            std::cerr << "[!] Invalid command: Requires 1-50 instructions (got "
+                << parsedInstructions.size() << ")\n";
             return;
         }
 
-        // Validate memory size
+        // --- Memory Validation ---
         int memorySize;
         try {
             memorySize = std::stoi(memSizeStr);
         }
         catch (...) {
-            std::cout << "[*] Invalid memory size: must be integer\n";
+            std::cerr << "[!] Invalid memory size: must be integer\n";
             return;
         }
 
-        // Check memory range and power of 2
-        if (memorySize < 64 || memorySize > 65536) {
-            std::cout << "[*] Memory must be 64-65536 bytes\n";
-            return;
-        }
-        if ((memorySize & (memorySize - 1)) != 0) {  // Power of 2 check
-            std::cout << "[*] Memory must be power of 2 (e.g., 64, 128, 256,...)\n";
+        // Check power-of-2 and range (64-65536 bytes)
+        if (memorySize < 64 || memorySize > 65536 || (memorySize & (memorySize - 1)) != 0) {
+            std::cerr << "[!] Memory must be 64-65536 bytes and a power of 2\n";
             return;
         }
 
-        // Create process with custom instructions
-        processManager.createProcess(processName, instructions.size(), memorySize);
-        std::shared_ptr<Process> proc = processManager.getSharedProcess(processName);
-        proc->setInstructions(instructions);  // Implement this in Process class
+        // --- Process Creation ---
+        try {
+            processManager.createProcess(processName, parsedInstructions.size(), memorySize);
+            auto proc = processManager.getSharedProcess(processName);
+            proc->setParsedInstructions(parsedInstructions);  // Store for execution
 
-        if (scheduler) {
-            scheduler->addProcess(proc);
-            std::cout << "[*] Created '" << processName << "' with "
-                << instructions.size() << " instructions\n";
+            if (scheduler) {
+                scheduler->addProcess(proc);
+                std::cout << "[+] Created process '" << processName
+                    << "' with " << parsedInstructions.size()
+                    << " instructions\n";
+            }
+            else {
+                throw std::runtime_error("Scheduler not initialized");
+            }
         }
-        else {
-            std::cerr << "[!] Scheduler not initialized\n";
+        catch (const std::exception& e) {
+            std::cerr << "[!] Failed to create process: " << e.what() << "\n";
         }
     }
 
@@ -766,7 +803,7 @@ void Shell::prompt()
             << "  initialize\n"
             << "  screen\n"
             << "    - screen -s <args>\n"
-            << "    - screen -c <args>\n"  // ADD THIS LINE
+            << "    - screen -c <args>\n" 
             << "    - screen -r <args>\n"
             << "    - screen -ls\n"
             << "  scheduler-start\n"

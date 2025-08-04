@@ -12,7 +12,8 @@ add_executable(main main.cpp
         "AddCommand.cpp"
         "ConfigManager.h"
         "ConfigManager.cpp"
-         
+        "ReadCommand.h"
+        "WriteCommand.h"
          
         "DeclareCommand.cpp"
         "DeclareCommand.h"
@@ -37,4 +38,4 @@ add_executable(main main.cpp
         "SleepCommand.h"
         "SubtractCommand.cpp"
         "SubtractCommand.h"
- "ForCommand.cpp" "ForCommand.h" "IMemoryAllocator.h" "FlatMemoryAllocator.cpp")
+ "ForCommand.cpp" "ForCommand.h" "IMemoryAllocator.h" "FlatMemoryAllocator.cpp" "ReadCommand.cpp" "WriteCommand.cpp")

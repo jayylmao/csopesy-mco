@@ -30,12 +30,12 @@ public:
 	 * @brief Helper to recursively flatten FOR-like logic into instructionQueue.
 	 */
 	void createFlatCommand(int& remaining, int depth);
-
-
 	/**
-	 * @brief Get the string of instructions to be used for the process.
+	 * @brief Sets the process's instructions from pre-parsed command components.
+	 * @param instructions A vector of instructions, where each instruction is broken down
+	 *               into its command and arguments (e.g., {"DECLARE", "varA", "10"}).
 	 */
-	void setInstructions(const std::vector<std::string>& instructions);
+	void setParsedInstructions(const std::vector<std::vector<std::string>>& instructions);
 
 	/**
 	 * @brief Run one of the process's instructions.
