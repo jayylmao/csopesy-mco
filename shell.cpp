@@ -346,7 +346,7 @@ screenList();
             return;
         }
         
-        std::system("cls");
+        //std::system("cls");
         std::string processName = args[1];
 
         std::vector<Process*> processes = processManager.listProcesses();
@@ -366,9 +366,15 @@ screenList();
 
         if (found) 
         {
+            std::system("cls");
             auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager, memoryManager);
             screenConsole->onEnabled();
             clear();
+        }
+        else
+        {
+            std::cout << "[*] You must provide a valid process name. " << std::endl;
+            return;
         }
         return;
     }
