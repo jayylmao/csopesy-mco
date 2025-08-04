@@ -16,7 +16,9 @@ public:
 		ADD,
 		SUBTRACT,
 		SLEEP,
-		FOR //5
+		FOR, //5
+		READ,
+		WRITE
 	};
 	static int PER_INSTRUCTION_DELAY_MS;
 	ICommand(Type type);
