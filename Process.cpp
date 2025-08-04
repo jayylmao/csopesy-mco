@@ -46,7 +46,7 @@ Process::Process(const std::string& name, int pid, int instructionCount, int mem
  * @param instructions Pointer to vector of unique pointers of commands.
  */
 Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions)
-	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false)
+	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false), memory(64)
 {
 	// store creation timestamp.
 	auto now = std::chrono::system_clock::now();

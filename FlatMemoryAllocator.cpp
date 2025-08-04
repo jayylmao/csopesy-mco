@@ -1,5 +1,6 @@
 #include "FlatMemoryAllocator.h"
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <unordered_set>

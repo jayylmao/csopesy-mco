@@ -98,7 +98,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
     void* memBlock;
     
     while (true) {
-        timeQuantum++;
         std::shared_ptr<Process> process;
 
         {
@@ -111,10 +110,8 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
         }
 
-        
-
         if (!memBlock) {
-            //std::cerr << "Could not allocate memory for PID " << process->getPID() << "\n";
+            process->logs.push_back("[*] Could not allocate memory for PID " + process->getPID());
             std::lock_guard<std::mutex> lock(queueMutex);
             readyQueue.push_back(process); // Put it back in the queue
             cv.notify_one();
@@ -130,8 +127,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             process->executeInstruction();
             ++slice;
         }
-
-  
         
         if (!process->hasFinished()) {
             process->setCoreId(-1);  // Reset core to "Pending"
@@ -142,6 +137,40 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         }
         else {
             memoryManager->deallocate(process->getPID());
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(snapshotMutex);
+
+            if (coreId == 0) {
+                if (timeQuantum % snapshotInterval == 0) {
+                    std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
+                    file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
+                    file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
+                    file << "Total External fragmentation in KB: "
+                        << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
+
+                    auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
+                    if (!flatMem) {
+                        file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
+                        return;
+                    }
+
+                    auto blocks = flatMem->getBlocks();
+                    std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
+                        return (a.start + a.size) > (b.start + b.size);
+                        });
+
+                    file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
+                    for (const auto& block : blocks) {
+                        file << block.start + block.size << "\n";
+                        file << "P" << block.pid << "\n";
+                        file << block.start << "\n\n";
+                    }
+                    file << "----start---- = 0\n";
+                    file.close();
+                }
+            }
         }
     }
 }
