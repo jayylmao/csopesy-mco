@@ -229,3 +229,18 @@ int Process::getMemory() const
 {
 	return this->memory;
 }
+
+void Process::setInstructions(const std::vector<std::string>& instructions) {
+	// Clear existing instructions
+	while (!instructionQueue.empty()) {
+		instructionQueue.pop();
+	}
+
+	// Placeholder implementation: Convert each string to a PrintCommand
+	for (const auto& inst : instructions) {
+		instructionQueue.push(std::make_unique<PrintCommand>("Executing: " + inst));
+	}
+
+	// Update total instructions count
+	totalInstructions = instructions.size();
+}

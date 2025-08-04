@@ -373,6 +373,86 @@ screenList();
         return;
     }
 
+    else if (args[0] == "-c") {
+        // Validate argument count
+        if (args.size() < 4) {
+            std::cout << "[*] Usage: screen -c <process_name> <memory_size> \"<semicolon_separated_instructions>\"\n";
+            std::cout << "[*] Example: screen -c proc1 256 \"DECLARE var1 10; PRINT var1\"\n";
+            return;
+        }
+
+        std::string processName = args[1];
+        std::string memSizeStr = args[2];
+
+        // Reconstruct instruction string
+        std::string instructionStr;
+        for (size_t i = 3; i < args.size(); ++i) {
+            instructionStr += args[i];
+            if (i < args.size() - 1) instructionStr += " ";
+        }
+
+        // Remove surrounding quotes if present
+        if (instructionStr.size() >= 2 &&
+            instructionStr.front() == '"' &&
+            instructionStr.back() == '"') {
+            instructionStr = instructionStr.substr(1, instructionStr.size() - 2);
+        }
+
+        // Split instructions by semicolon
+        std::vector<std::string> instructions;
+        std::istringstream iss(instructionStr);
+        std::string token;
+        while (std::getline(iss, token, ';')) {
+            // Trim whitespace
+            token.erase(0, token.find_first_not_of(" \t\n\r\f\v"));
+            token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
+            if (!token.empty()) {
+                instructions.push_back(token);
+            }
+        }
+
+        // Validate instruction count
+        if (instructions.empty() || instructions.size() > 50) {
+            std::cout << "[*] Invalid command: Requires 1-50 instructions\n";
+            return;
+        }
+
+        // Validate memory size
+        int memorySize;
+        try {
+            memorySize = std::stoi(memSizeStr);
+        }
+        catch (...) {
+            std::cout << "[*] Invalid memory size: must be integer\n";
+            return;
+        }
+
+        // Check memory range and power of 2
+        if (memorySize < 64 || memorySize > 65536) {
+            std::cout << "[*] Memory must be 64-65536 bytes\n";
+            return;
+        }
+        if ((memorySize & (memorySize - 1)) != 0) {  // Power of 2 check
+            std::cout << "[*] Memory must be power of 2 (e.g., 64, 128, 256,...)\n";
+            return;
+        }
+
+        // Create process with custom instructions
+        processManager.createProcess(processName, instructions.size(), memorySize);
+        std::shared_ptr<Process> proc = processManager.getSharedProcess(processName);
+        proc->setInstructions(instructions);  // Implement this in Process class
+
+        if (scheduler) {
+            scheduler->addProcess(proc);
+            std::cout << "[*] Created '" << processName << "' with "
+                << instructions.size() << " instructions\n";
+        }
+        else {
+            std::cerr << "[!] Scheduler not initialized\n";
+        }
+    }
+
+
     else if (args.size() > 2)
     {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
@@ -675,15 +755,16 @@ void Shell::prompt()
     else if (input_tokens[0] == "exit") {
         setQuit();
     }
-    else if (input_tokens[0] == "help") { //update for more commands soon.
+    else if (input_tokens[0] == "help") {
         std::cout << "[*] Available commands:\n\n"
             << "  initialize\n"
             << "  screen\n"
             << "    - screen -s <args>\n"
+            << "    - screen -c <args>\n"  // ADD THIS LINE
             << "    - screen -r <args>\n"
             << "    - screen -ls\n"
-            << "  scheduler-start  Start generating batch processes\n"  // Updated help text
-            << "  scheduler-stop   Stop generating batch processes\n"   // Updated help text
+            << "  scheduler-start\n"
+            << "  scheduler-stop\n"
             << "  report-util\n"
             << "  clear\n"
             << "  exit\n" << std::endl;

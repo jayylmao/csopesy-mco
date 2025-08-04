@@ -31,6 +31,12 @@ public:
 	 */
 	void createFlatCommand(int& remaining, int depth);
 
+
+	/**
+	 * @brief Get the string of instructions to be used for the process.
+	 */
+	void setInstructions(const std::vector<std::string>& instructions);
+
 	/**
 	 * @brief Run one of the process's instructions.
 	 */
