@@ -185,7 +185,7 @@ size_t DemandPagingAllocator::calculatePageOffset(int pid, size_t virtualPage)
 
 
 //CHECK IF REMOVING THIS BREAKS ANYTHING
-/*
+
 void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
 {
     std::ifstream backingStore("csopesy-backing-store.txt", std::ios::binary);
@@ -194,33 +194,7 @@ void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
     backingStore.read(buffer, pageSize);
     backingStore.close();
 }
-*/
 
-void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer) {
-    size_t pageSizeBytes = pageSize * 1024;
-    size_t offset = calculatePageOffset(pid, virtualPage);
-
-    std::ifstream backingStore("csopesy-backing-store.txt", std::ios::binary);
-    if (!backingStore) {
-        memset(buffer, 0, pageSizeBytes);
-        return;
-    }
-
-    backingStore.seekg(0, std::ios::end);
-    size_t fileSize = backingStore.tellg();
-
-    if (offset >= fileSize) {
-        memset(buffer, 0, pageSizeBytes);
-        return;
-    }
-
-    backingStore.seekg(offset);
-    backingStore.read(buffer, pageSizeBytes);
-
-    if (static_cast<size_t>(backingStore.gcount()) < pageSizeBytes) {
-        memset(buffer + backingStore.gcount(), 0, pageSizeBytes - backingStore.gcount());
-    }
-}
 
 void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buffer)
 {
@@ -259,6 +233,33 @@ size_t DemandPagingAllocator::getPageSize() const
     return this->pageSize;
 }
 
+void DemandPagingAllocator::pageInWithZeroInit(int pid, size_t virtualPage, char* buffer) {
+    size_t pageSizeBytes = pageSize * 1024;
+    size_t offset = calculatePageOffset(pid, virtualPage);
+
+    std::ifstream backingStore("csopesy-backing-store.txt", std::ios::binary);
+    if (!backingStore) {
+        memset(buffer, 0, pageSizeBytes);
+        return;
+    }
+
+    backingStore.seekg(0, std::ios::end);
+    size_t fileSize = backingStore.tellg();
+
+    if (offset >= fileSize) {
+        memset(buffer, 0, pageSizeBytes);
+        return;
+    }
+
+    backingStore.seekg(offset);
+    backingStore.read(buffer, pageSizeBytes);
+
+    if (static_cast<size_t>(backingStore.gcount()) < pageSizeBytes) {
+        memset(buffer + backingStore.gcount(), 0, pageSizeBytes - backingStore.gcount());
+    }
+}
+
+// Update readUint16 and writeUint16 to use pageInWithZeroInit
 uint16_t DemandPagingAllocator::readUint16(int pid, size_t address) {
     size_t pageSizeBytes = pageSize * 1024;
     size_t pageIndex = address / pageSizeBytes;
@@ -269,22 +270,25 @@ uint16_t DemandPagingAllocator::readUint16(int pid, size_t address) {
         throw std::runtime_error("Cross-page access not allowed");
     }
 
-    accessPage(pid, pageIndex);
+    // Use the zero-initializing version
+    char* buffer = new char[pageSize];
+    pageInWithZeroInit(pid, pageIndex, buffer);
 
     auto& table = pageTables[pid];
     if (pageIndex >= table.size()) {
+        delete[] buffer;
         throw std::runtime_error("Page index out of range");
     }
 
     PageTableEntry& entry = table[pageIndex];
     if (!entry.present) {
+        delete[] buffer;
         throw std::runtime_error("Page not present");
     }
 
-    char* physicalAddr = mainMemory + (entry.physicalFrame * pageSizeBytes) + offset;
     uint16_t value = 0;
-    memcpy(&value, physicalAddr, sizeof(uint16_t));
-
+    memcpy(&value, buffer + offset, sizeof(uint16_t));
+    delete[] buffer;
     return value;
 }
 
@@ -298,20 +302,26 @@ void DemandPagingAllocator::writeUint16(int pid, size_t address, uint16_t value)
         throw std::runtime_error("Cross-page access not allowed");
     }
 
-    accessPage(pid, pageIndex);
+    // First ensure the page is loaded with zero-init if needed
+    char* buffer = new char[pageSize];
+    pageInWithZeroInit(pid, pageIndex, buffer);
 
     auto& table = pageTables[pid];
     if (pageIndex >= table.size()) {
+        delete[] buffer;
         throw std::runtime_error("Page index out of range");
     }
 
     PageTableEntry& entry = table[pageIndex];
     if (!entry.present) {
+        delete[] buffer;
         throw std::runtime_error("Page not present");
     }
 
-    char* physicalAddr = mainMemory + (entry.physicalFrame * pageSizeBytes) + offset;
-    memcpy(physicalAddr, &value, sizeof(uint16_t));
-}
+    // Update the value in the buffer
+    memcpy(buffer + offset, &value, sizeof(uint16_t));
 
-// Update pageIn to initialize pages to zero
+    // Write the modified page back
+    pageOut(pid, pageIndex, buffer);
+    delete[] buffer;
+}

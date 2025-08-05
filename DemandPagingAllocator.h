@@ -90,4 +90,6 @@ private:
 	 * @brief Evict frames when none are available.
 	 */
 	void pageFaultHandler(int pid, size_t virtualPage);
+
+	void pageInWithZeroInit(int pid, size_t virtualPage, char* buffer);
 };
