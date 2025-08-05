@@ -43,7 +43,6 @@ void ScreenS::display() {
         std::cout << "Lines of Code: " << totalLines << "\n";
         std::cout << "Timestamp of screen creation: " << creationTimestamp << "\n";
         std::cout << "---------------------------\n";
-        std::cout << memoryManager->displayMemory();
     }
 }
 //NEW ONE

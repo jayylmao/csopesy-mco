@@ -7,9 +7,11 @@
 DemandPagingAllocator::DemandPagingAllocator(size_t memory, size_t pageSize)
     : memory(memory), pageSize(pageSize), mainMemory(new char[memory])
 {
+
     frameCount = memory / pageSize; // calculate number of frames.
     frameAllocationMap.resize(frameCount, false); // initialize all frames as unallocated.
     frameTable.resize(frameCount, { -1, static_cast<size_t>(-1) });
+
 
     std::ofstream backingStore("csopesy-backing-store.txt", std::ios::out | std::ios::binary | std::ios::trunc);
     if (backingStore) {
@@ -49,6 +51,10 @@ void* DemandPagingAllocator::allocate(size_t size, int pid)
     }
 
     pageTables[pid] = std::move(table);
+
+    totalAllocatedMemory += numPages * pageSize;
+
+
     return nullptr;
 }
 
@@ -85,7 +91,7 @@ void DemandPagingAllocator::deallocate(int pid)
 
         frameQueue = newFrameQueue;
     }
-
+    totalAllocatedMemory -= it->second.size() * pageSize;
     pageTables.erase(it);
     processPageBase.erase(pid);
 }
@@ -189,6 +195,8 @@ void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
     backingStore.seekg(offset);
     backingStore.read(buffer, pageSize);
     backingStore.close();
+
+    numPagedIn++;
 }
 
 void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buffer)
@@ -203,6 +211,8 @@ void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buf
     backingStore.seekp(offset);
     backingStore.write(buffer, pageSize);
     backingStore.close();
+
+    numPagedOut++;
 }
 
 void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
@@ -226,4 +236,20 @@ void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
 size_t DemandPagingAllocator::getPageSize() const
 {
     return this->pageSize;
+}
+
+//int DemandPagingAllocator::getUsedMemory() const {
+//    return static_cast<int>(totalAllocatedMemory);
+//}
+
+int DemandPagingAllocator::getUsedMemory() const {
+    return static_cast<int>(std::count(frameAllocationMap.begin(), frameAllocationMap.end(), true) * pageSize);
+}
+
+int DemandPagingAllocator::getPagedIn() const {
+    return static_cast<int>(numPagedIn);
+}
+
+int DemandPagingAllocator::getPagedOut() const {
+    return static_cast<int>(numPagedOut);
 }

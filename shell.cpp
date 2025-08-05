@@ -308,7 +308,7 @@ void Shell::screen(std::vector<std::string> args)
     } // switch to list screen command.
     //SCREEN -LS
     else if (args[0] == "-ls") { 
-screenList();
+    screenList();
         return;
     } // too many arguments given to screen.
     //SCREEN - S
@@ -522,6 +522,28 @@ screenList();
     }
 }
 
+void Shell::vmstat() {
+    int totalMemory = maxMem;                      // From config
+    int usedMemory = memoryManager->getUsedMemory(); // Implement this in DemandPagingAllocator
+    int freeMemory = totalMemory - usedMemory;
+
+    int idleTicks = scheduler ? scheduler->getIdleTicks() : 0;
+    int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
+    int totalTicks = idleTicks + activeTicks; 
+
+    int pagedIn = memoryManager->getPagedIn();     
+    int pagedOut = memoryManager->getPagedOut();   
+
+    std::cout << totalMemory << " K total memory\n"
+        << usedMemory << " K used memory\n"
+        << freeMemory << " K free memory\n"
+        << idleTicks << " idle cpu ticks\n"
+        << activeTicks << " active cpu ticks\n"
+        << totalTicks << " total cpu ticks\n"
+        << pagedIn << " num paged in\n"
+        << pagedOut << " num paged out\n";
+}
+
 void Shell::screenList()
 {
     outputProcessList(std::cout);
@@ -729,6 +751,11 @@ void Shell::printHeader()
         << "\033[0m"; // Reset color
 }
 
+void Shell::processSMI()
+{
+    std::cout << memoryManager->displayMemory() << std::endl;
+}
+
 void Shell::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
 {
     // push an empty string and return to avoid going through the splitting process if input is empty.
@@ -797,11 +824,17 @@ void Shell::prompt()
     else if (input_tokens[0] == "marquee") {
         marquee();
     }
+    else if (input_tokens[0] == "vmstat") {
+        vmstat(); // Add this method in Shell
+    }
     else if (input_tokens[0] == "clear") {
         clear();
     }
     else if (input_tokens[0] == "exit") {
         setQuit();
+    }
+    else if (input_tokens[0] == "process-smi") {
+        processSMI();
     }
     else if (input_tokens[0] == "help") {
         std::cout << "[*] Available commands:\n\n"
