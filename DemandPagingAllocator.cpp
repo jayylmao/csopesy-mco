@@ -30,6 +30,7 @@ DemandPagingAllocator::~DemandPagingAllocator()
 
 void* DemandPagingAllocator::allocate(size_t size, int pid)
 {
+    std::lock_guard<std::mutex> lock(allocatorMutex);
     // shift free page base tracker over to by the number of pages allocated.
     size_t numPages = (size + pageSize - 1) / pageSize;
     if (pageSize == 0) throw std::runtime_error("Page size is zero");
@@ -41,7 +42,6 @@ void* DemandPagingAllocator::allocate(size_t size, int pid)
         table.push_back(PageTableEntry{
             i,
             static_cast<size_t>(-1),
-            false,
             false
             });
     }
@@ -52,13 +52,36 @@ void* DemandPagingAllocator::allocate(size_t size, int pid)
 
 void DemandPagingAllocator::deallocate(int pid)
 {
+    std::lock_guard<std::mutex> lock(allocatorMutex);
     auto it = pageTables.find(pid);
     if (it == pageTables.end()) return;
 
+    std::vector<size_t> framesToClear;
+
+    // check for frames occupied by this process to clear
     for (const auto& entry : it->second) {
         if (entry.present && entry.physicalFrame != static_cast<size_t>(-1)) {
-            frameAllocationMap[entry.physicalFrame] = false;
+            size_t frame = entry.physicalFrame;
+            frameAllocationMap[frame] = false;
+            frameTable[frame] = { -1, static_cast<size_t>(-1) };
+            framesToClear.push_back(frame);
         }
+    }
+
+    // rebuild frame queue without cleared frames.
+    if (!framesToClear.empty()) {
+        std::queue<size_t> newFrameQueue;
+
+        while (!frameQueue.empty()) {
+            size_t currentFrame = frameQueue.front();
+            frameQueue.pop();
+
+            if (std::find(framesToClear.begin(), framesToClear.end(), currentFrame) == framesToClear.end()) {
+                newFrameQueue.push(currentFrame);
+            }
+        }
+
+        frameQueue = newFrameQueue;
     }
 
     pageTables.erase(it);
@@ -67,6 +90,7 @@ void DemandPagingAllocator::deallocate(int pid)
 
 std::string DemandPagingAllocator::displayMemory()
 {
+    std::lock_guard<std::mutex> lock(allocatorMutex);
     return "TODO: implement memory display";
 }
 
@@ -166,6 +190,7 @@ void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buf
 
 void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
 {
+    std::lock_guard<std::mutex> lock(allocatorMutex);
     auto it = pageTables.find(pid);
     if (it == pageTables.end()) std::cerr << "PID not found in page tables." << std::endl;
     auto& table = it->second;

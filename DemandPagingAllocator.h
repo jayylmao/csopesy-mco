@@ -4,13 +4,13 @@
 #include <unordered_map>
 #include <iostream>
 #include <queue>
+#include <mutex>
 
 // used for internal management.
 struct PageTableEntry {
 	size_t virtualPage;
 	size_t physicalFrame;
 	bool present;
-	bool dirty; // track if page has been used.
 };
 
 // used for external visualization.
@@ -28,7 +28,6 @@ public:
 	void deallocate(int pid) override;
 	std::string displayMemory() override;
 	void accessPage(int pid, size_t virtualPage);
-	void writeToPage(int pid, size_t virtualPage);
 
 	size_t getPageSize() const;
 
@@ -62,6 +61,8 @@ private:
 
 	// physical memory.
 	char* mainMemory;
+
+	std::mutex allocatorMutex;
 
 	/**
 	 * @brief Find a free frame when loading a page into memory.

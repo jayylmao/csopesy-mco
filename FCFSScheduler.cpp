@@ -77,5 +77,8 @@ void FCFSScheduler::coreWorker(int coreId)
                 process->executeInstruction();
             }
         }
+        else {
+            memoryManager->deallocate(process->getPID());
+        }
     }
 }
