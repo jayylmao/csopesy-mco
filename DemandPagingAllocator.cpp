@@ -117,6 +117,22 @@ std::string DemandPagingAllocator::displayMemory()
     return ss.str();
 }
 
+int DemandPagingAllocator::getProcessMemory(int pid)
+{
+	std::lock_guard<std::mutex> lock(allocatorMutex);
+
+
+	auto it = pageTables.find(pid);
+	if (it == pageTables.end()) {
+		return 0; // Or throw an error if you want to indicate PID not found
+	}
+
+	size_t numPages = it->second.size();
+	return static_cast<int>(numPages * pageSize); // return memory in bytes
+
+}
+
+
 void DemandPagingAllocator::pageFaultHandler(int pid, size_t virtualPage)
 {
     size_t frame = findFreeFrame();

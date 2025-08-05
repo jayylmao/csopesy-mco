@@ -5,6 +5,7 @@
 #include <iostream>
 #include <queue>
 #include <mutex>
+#include <map>
 
 // used for internal management.
 struct PageTableEntry {
@@ -33,6 +34,11 @@ public:
 	int getUsedMemory() const;
 	int getPagedIn() const;
 	int getPagedOut() const;
+
+	/**
+	 * @brief Get physical memory usage per process.
+	 */
+	int getProcessMemory(int pid);
 
 private:
 	// maps pid to vector of page tables.
