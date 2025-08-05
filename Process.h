@@ -97,6 +97,15 @@ public:
 
 	int getMemory() const;
 
+	void setMemoryAccessViolation(const std::string& time, const std::string& address);
+	bool hasMemoryAccessViolation() const;
+	std::string getViolationTime() const;
+	std::string getViolationAddress() const;
+
+	std::shared_ptr<DemandPagingAllocator> getMemoryAllocator() const {
+		return memoryManager;
+	}
+
 private:
 	std::string name; // name of the process
 	int pid; // unique id assigned to process
@@ -117,6 +126,10 @@ private:
 	mutable std::mutex mtx; // protects coreId and finished
 
 	std::shared_ptr<DemandPagingAllocator> memoryManager;
+
+	bool memoryAccessViolation = false;
+	std::string violationTime;
+	std::string violationAddress;
 
 	/**
 	 * @brief Helper method to access page in memory.

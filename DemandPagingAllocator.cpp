@@ -190,11 +190,16 @@ void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buf
 
 void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
 {
-    std::lock_guard<std::mutex> lock(allocatorMutex);
     auto it = pageTables.find(pid);
-    if (it == pageTables.end()) std::cerr << "PID not found in page tables." << std::endl;
+    if (it == pageTables.end()) {
+        throw std::runtime_error("PID " + std::to_string(pid) + " not found in page tables");
+    }
+
     auto& table = it->second;
-    if (virtualPage >= table.size()) std::cerr << "Virtual page index out of range." << std::endl;
+    if (virtualPage >= table.size()) {
+        throw std::runtime_error("Virtual page " + std::to_string(virtualPage) +
+            " out of range for PID " + std::to_string(pid));
+    }
 
     if (!table[virtualPage].present) {
         pageFaultHandler(pid, virtualPage);
