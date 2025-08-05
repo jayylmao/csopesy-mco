@@ -5,6 +5,7 @@
 #include <iostream>
 #include <queue>
 #include <mutex>
+#include <cstdint>
 
 // used for internal management.
 struct PageTableEntry {
