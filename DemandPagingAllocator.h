@@ -5,7 +5,7 @@
 #include <iostream>
 #include <queue>
 #include <mutex>
-#include <map>
+#include <atomic>
 
 // used for internal management.
 struct PageTableEntry {
@@ -34,6 +34,10 @@ public:
 	int getUsedMemory() const;
 	int getPagedIn() const;
 	int getPagedOut() const;
+
+	int read(int pid, size_t address);
+
+	void write(int pid, size_t address, int value);
 
 	/**
 	 * @brief Get physical memory usage per process.
@@ -74,8 +78,8 @@ private:
 	std::mutex allocatorMutex;
 
 	size_t totalAllocatedMemory = 0;
-	size_t numPagedIn = 0;
-	size_t numPagedOut = 0;
+	std::atomic<size_t> numPagedIn{ 0 };
+	std::atomic<size_t> numPagedOut{ 0 };
 
 	/**
 	 * @brief Find a free frame when loading a page into memory.

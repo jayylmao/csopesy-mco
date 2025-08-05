@@ -121,15 +121,13 @@ int DemandPagingAllocator::getProcessMemory(int pid)
 {
 	std::lock_guard<std::mutex> lock(allocatorMutex);
 
-
 	auto it = pageTables.find(pid);
 	if (it == pageTables.end()) {
-		return 0; // Or throw an error if you want to indicate PID not found
+		return 0;
 	}
 
 	size_t numPages = it->second.size();
-	return static_cast<int>(numPages * pageSize); // return memory in bytes
-
+	return static_cast<int>(numPages * pageSize);
 }
 
 
@@ -233,6 +231,7 @@ void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buf
 
 void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
 {
+    std::lock_guard<std::mutex> lock(allocatorMutex);
     auto it = pageTables.find(pid);
     if (it == pageTables.end()) {
         throw std::runtime_error("PID " + std::to_string(pid) + " not found in page tables");
@@ -248,6 +247,67 @@ void DemandPagingAllocator::accessPage(int pid, size_t virtualPage)
         pageFaultHandler(pid, virtualPage);
     }
 }
+
+int DemandPagingAllocator::read(int pid, size_t address)
+{
+	std::lock_guard<std::mutex> lock(allocatorMutex);
+
+	size_t pageNumber = address / pageSize;
+	size_t offset = address % pageSize;
+
+	// Ensure the page is loaded (trigger page fault if necessary)
+	accessPage(pid, pageNumber);  // Your existing logic will handle page faulting
+
+    const auto& table = pageTables.at(pid);
+
+    if (pageNumber >= table.size()) {
+        throw std::runtime_error("Page number out of range");
+    }
+
+    const auto& entry = table.at(pageNumber);
+    size_t frame = entry.physicalFrame;
+
+    if (!entry.present || frame == static_cast<size_t>(-1)) {
+        throw std::runtime_error("Page not present in memory after accessPage");
+    }
+
+    char* physicalAddress = mainMemory + (frame * pageSize) + offset;
+
+    if (offset + sizeof(uint16_t) > pageSize) {
+        throw std::runtime_error("Read operation spans across page boundaries");
+    }
+
+    int val;
+    memcpy(&val, physicalAddress, sizeof(int));
+
+    return val;
+}
+
+void DemandPagingAllocator::write(int pid, size_t address, int value)
+{
+    std::lock_guard<std::mutex> lock(allocatorMutex);
+
+    size_t virtualPage = address / pageSize;
+    size_t offset = address & pageSize;
+
+    if (offset + sizeof(int) > pageSize) {
+        throw std::runtime_error("Invalid write operation");
+    }
+
+    accessPage(pid, virtualPage);
+
+    const auto& table = pageTables.at(pid);
+	const auto& entry = table.at(virtualPage);
+
+	if (entry.physicalFrame == static_cast<size_t>(-1) || !entry.present) {
+		throw std::runtime_error("Invalid frame access for page " + std::to_string(virtualPage));
+	}
+
+	char* physicalAddress = mainMemory + (entry.physicalFrame * pageSize) + offset;
+
+	memcpy(physicalAddress, &value, sizeof(int));
+}
+
 
 size_t DemandPagingAllocator::getPageSize() const
 {

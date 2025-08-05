@@ -38,8 +38,8 @@ void ReadCommand::execute(Process& process) {
 
         // If we get here, memory access was successful
         // Actual read implementation would go here
-        // uint16_t value = memoryManager->read(address);
-        // process.setVar(destVariableName, value);
+        uint16_t value = memoryManager->read(process.getPID(), address);
+        process.setVar(destVariableName, value);
     }
     catch (const std::exception& e) {
         // Handle memory access violation
