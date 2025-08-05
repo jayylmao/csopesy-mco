@@ -134,6 +134,7 @@ public:
     int getCores();
 
     void vmstat();
+    void processSMI();
 
 private:
     bool init = false; // System starts uninitialized at first.

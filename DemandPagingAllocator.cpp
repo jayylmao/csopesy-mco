@@ -243,8 +243,12 @@ size_t DemandPagingAllocator::getPageSize() const
     return this->pageSize;
 }
 
+//int DemandPagingAllocator::getUsedMemory() const {
+//    return static_cast<int>(totalAllocatedMemory);
+//}
+
 int DemandPagingAllocator::getUsedMemory() const {
-    return static_cast<int>(totalAllocatedMemory);
+    return static_cast<int>(std::count(frameAllocationMap.begin(), frameAllocationMap.end(), true) * pageSize);
 }
 
 int DemandPagingAllocator::getPagedIn() const {

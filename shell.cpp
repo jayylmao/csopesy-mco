@@ -487,7 +487,7 @@ void Shell::screen(std::vector<std::string> args)
 
             if (scheduler) {
                 scheduler->addProcess(proc);
-                std::cout << "[+] Created process '" << processName;
+                std::cout << "[+] Created process '" << processName << "' Instructions: " <<parsedInstructions.size();
                    
             }
             else {
@@ -527,13 +527,9 @@ void Shell::vmstat() {
     int usedMemory = memoryManager->getUsedMemory(); // Implement this in DemandPagingAllocator
     int freeMemory = totalMemory - usedMemory;
 
-    int idleTicks = 0;
-    int activeTicks = 0;
-    int totalTicks = 0;
-
-    //int idleTicks = scheduler ? scheduler->getIdleTicks() : 0; // Needs to be implemented
-    //int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
-    //int totalTicks = idleTicks + activeTicks; // Needs to be implemented
+    int idleTicks = scheduler ? scheduler->getIdleTicks() : 0;
+    int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
+    int totalTicks = idleTicks + activeTicks; 
 
     int pagedIn = memoryManager->getPagedIn();     
     int pagedOut = memoryManager->getPagedOut();   
@@ -541,9 +537,9 @@ void Shell::vmstat() {
     std::cout << totalMemory << " K total memory\n"
         << usedMemory << " K used memory\n"
         << freeMemory << " K free memory\n"
-        << idleTicks << " idle cpu ticks -- Needs to be implemented\n"
-        << activeTicks << " active cpu ticks -- Needs to be implemented\n"
-        << totalTicks << " total cpu ticks -- Needs to be implemented\n"
+        << idleTicks << " idle cpu ticks\n"
+        << activeTicks << " active cpu ticks\n"
+        << totalTicks << " total cpu ticks\n"
         << pagedIn << " num paged in\n"
         << pagedOut << " num paged out\n";
 }
@@ -755,6 +751,11 @@ void Shell::printHeader()
         << "\033[0m"; // Reset color
 }
 
+void Shell::processSMI()
+{
+    std::cout << memoryManager->displayMemory() << std::endl;
+}
+
 void Shell::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
 {
     // push an empty string and return to avoid going through the splitting process if input is empty.
@@ -831,6 +832,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "exit") {
         setQuit();
+    }
+    else if (input_tokens[0] == "process-smi") {
+        processSMI();
     }
     else if (input_tokens[0] == "help") {
         std::cout << "[*] Available commands:\n\n"
