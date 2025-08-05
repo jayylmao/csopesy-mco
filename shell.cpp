@@ -487,7 +487,7 @@ screenList();
 
             if (scheduler) {
                 scheduler->addProcess(proc);
-                std::cout << "[+] Created process '" << processName;
+                std::cout << "[+] Created process '" << processName << "' Instructions: " <<parsedInstructions.size();
                    
             }
             else {

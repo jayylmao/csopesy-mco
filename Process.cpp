@@ -51,6 +51,7 @@ Process::Process(const std::string& name, int pid, int instructionCount, int mem
  * @param pid Unique process ID.
  * @param instructions Pointer to vector of unique pointers of commands.
  */
+/*
 Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager)
 	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false), memory(64), memoryManager(memoryManager)
 {
@@ -78,7 +79,7 @@ Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<I
 		instructionQueue.push(std::move(instruction));
 	}
 }
-
+*/
 void Process::createInstructions()
 {
 	int remaining = totalInstructions;
@@ -282,51 +283,62 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 				std::vector<std::string> elements;
 				std::string content = instrParts[1];
 
-				// Improved parsing logic
 				size_t start = 0;
-				bool inQuotes = false;
-				int bracketDepth = 0;
+				bool inEscapedQuotes = false;
+				size_t quoteStartPos = 0;
 
 				for (size_t i = 0; i <= content.size(); ++i) {
-					char c = (i < content.size()) ? content[i] : '\0';
+					char c = (i < content.size()) ? content[i] : '+';  // Force final split
 
-					// Handle quotes (considering escaped quotes)
-					if (c == '"' && (i == 0 || content[i - 1] != '\\')) {
-						inQuotes = !inQuotes;
-					}
-					// Handle parentheses (if needed for future extensions)
-					else if (!inQuotes) {
-						if (c == '(') bracketDepth++;
-						else if (c == ')') bracketDepth--;
-					}
-
-					// Split at + operator when not in quotes and outside brackets
-					if (!inQuotes && bracketDepth == 0) {
-						if (c == '+' || i == content.size()) {
-							// Extract element between start and current position
+					// Detect escaped quote (\")
+					if (c == '\\' && i + 1 < content.size() && content[i + 1] == '"') {
+						if (!inEscapedQuotes) {
+							// Opening quote
 							if (i > start) {
-								std::string element = content.substr(start, i - start);
-
-								// Trim whitespace only outside quotes
-								size_t first = element.find_first_not_of(" \t");
-								size_t last = element.find_last_not_of(" \t");
-
-								if (first != std::string::npos) {
-									element = element.substr(first, (last - first + 1));
-
-									// Validate variables
-									if (!element.empty()) {
-										if (element.front() != '"' &&
-											symbolTable.find(element) == symbolTable.end()) {
-											throw std::runtime_error("Undefined variable: " + element);
-										}
-										elements.push_back(element);
-									}
-								}
+								std::string before = content.substr(start, i - start);
+								throw std::runtime_error("Unexpected content before \\\": " + before);
 							}
-							start = i + 1;  // Move start to next character
+							inEscapedQuotes = true;
+							quoteStartPos = i;
+							i++;  // Skip the quote
+							start = i + 1;
+						}
+						else {
+							// Closing quote
+							inEscapedQuotes = false;
+							std::string literal = content.substr(start, i - start);
+							elements.push_back("\\\"" + literal + "\\\"");
+							i++;  // Skip the quote
+							start = i + 1;
 						}
 					}
+					// Split at + when not in escaped quotes
+					else if (!inEscapedQuotes && c == '+') {
+						if (i > start) {
+							std::string element = content.substr(start, i - start);
+							// Trim whitespace
+							element.erase(0, element.find_first_not_of(" \t"));
+							element.erase(element.find_last_not_of(" \t") + 1);
+
+							if (!element.empty()) {
+								// Variables must NOT be quoted
+								if (element.front() == '"' || element.back() == '"') {
+									throw std::runtime_error("Invalid string format. Use \\\" for strings: " + element);
+								}
+								// Validate variable exists
+								if (symbolTable.find(element) == symbolTable.end()) {
+									throw std::runtime_error("Undefined variable: " + element);
+								}
+								elements.push_back(element);
+							}
+						}
+						start = i + 1;
+					}
+				}
+
+				if (inEscapedQuotes) {
+					throw std::runtime_error("Unterminated \\\" string starting at position " +
+						std::to_string(quoteStartPos));
 				}
 
 				if (!elements.empty()) {
