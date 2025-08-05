@@ -5,6 +5,7 @@
 #include <iostream>
 #include <queue>
 #include <mutex>
+#include <map>
 #include <cstdint>
 
 // used for internal management.
@@ -34,6 +35,11 @@ public:
 	int getUsedMemory() const;
 	int getPagedIn() const;
 	int getPagedOut() const;
+
+	/**
+	 * @brief Get physical memory usage per process.
+	 */
+	int getProcessMemory(int pid);
 
 	uint16_t readUint16(int pid, size_t address);
 	void writeUint16(int pid, size_t address, uint16_t value);

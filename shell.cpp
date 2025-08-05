@@ -523,12 +523,12 @@ void Shell::screen(std::vector<std::string> args)
 }
 
 void Shell::vmstat() {
-    int totalMemory = maxMem;                      // From config
-    int usedMemory = memoryManager->getUsedMemory(); // Implement this in DemandPagingAllocator
+    int totalMemory = maxMem;
+    int usedMemory = memoryManager->getUsedMemory();
     int freeMemory = totalMemory - usedMemory;
 
     int idleTicks = scheduler ? scheduler->getIdleTicks() : 0;
-    int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
+    int activeTicks = scheduler ? scheduler->getActiveTicks() : 0;
     int totalTicks = idleTicks + activeTicks; 
 
     int pagedIn = memoryManager->getPagedIn();     
@@ -754,6 +754,21 @@ void Shell::printHeader()
 void Shell::processSMI()
 {
     std::cout << memoryManager->displayMemory() << std::endl;
+
+
+	std::vector<Process*> processes = processManager->listProcesses();
+
+	if (processes.empty()) {
+		std::cout << "[!] No processes are running." << std::endl;
+		return;
+	}
+
+	std::cout << "Running processes and memory usage:" << std::endl;
+	for (const auto& proc : processes) {
+		if (!(proc->hasFinished())) {
+			std::cout << proc->getName() << "\t" << memoryManager->getProcessMemory(proc->getPID()) << "kb" << std::endl;
+		}
+	}
 }
 
 void Shell::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
@@ -825,7 +840,7 @@ void Shell::prompt()
         marquee();
     }
     else if (input_tokens[0] == "vmstat") {
-        vmstat(); // Add this method in Shell
+        vmstat();
     }
     else if (input_tokens[0] == "clear") {
         clear();
