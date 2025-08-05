@@ -53,6 +53,13 @@ void FCFSScheduler::addProcess(std::shared_ptr<Process> process)
     cv.notify_one();
 }
 
+int FCFSScheduler::getIdleTicks() const {
+    return idleTicks.load();
+}
+int FCFSScheduler::getActiveTicks() const {
+    return activeTicks.load();
+}
+
 void FCFSScheduler::coreWorker(int coreId)
 {
     while (!stop) {
@@ -67,12 +74,18 @@ void FCFSScheduler::coreWorker(int coreId)
                 process = readyQueue.front();
                 readyQueue.pop();
             }
+            else {
+                idleTicks++;  
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));  
+                continue;
+            }
         }
 
         process->setCoreId(coreId);
 
         while (!process->hasFinished()) {
             process->executeInstruction();
+            activeTicks++;
         }
 
         processManager->cleanupProcess(process->getName());

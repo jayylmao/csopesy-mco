@@ -31,11 +31,15 @@ public:
      */
     void addProcess(std::shared_ptr<Process> process) override;
 
+    int getIdleTicks() const override;
+    int getActiveTicks() const override;
 
     /*
     * @brief Stops the scheduler.
     */
     void stopScheduler() override;
+
+
 
 private:
     int numCores;
@@ -48,6 +52,8 @@ private:
     std::atomic<bool> stop;
     std::shared_ptr<DemandPagingAllocator> memoryManager;
     std::shared_ptr<ProcessManager> processManager;
+    std::atomic<int> idleTicks = 0;
+    std::atomic<int> activeTicks = 0;
 
     /**
      * @brief Worker thread loop for each CPU core.

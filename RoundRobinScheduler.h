@@ -17,6 +17,9 @@ public:
     void runScheduler() override;
     void stopScheduler() override;
 
+    int getIdleTicks() const override;
+    int getActiveTicks() const override;
+
 private:
     int numCores;
     int timeQuantum;
@@ -41,4 +44,7 @@ private:
 
     std::atomic<int> globalQuantumCounter{ 0 };
     std::atomic<bool> quantumStop{ false };
+
+    std::atomic<int> idleTicks{ 0 };
+    std::atomic<int> activeTicks{ 0 };
 };

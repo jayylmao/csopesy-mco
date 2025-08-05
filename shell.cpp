@@ -527,13 +527,9 @@ void Shell::vmstat() {
     int usedMemory = memoryManager->getUsedMemory(); // Implement this in DemandPagingAllocator
     int freeMemory = totalMemory - usedMemory;
 
-    int idleTicks = 0;
-    int activeTicks = 0;
-    int totalTicks = 0;
-
-    //int idleTicks = scheduler ? scheduler->getIdleTicks() : 0; // Needs to be implemented
-    //int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
-    //int totalTicks = idleTicks + activeTicks; // Needs to be implemented
+    int idleTicks = scheduler ? scheduler->getIdleTicks() : 0;
+    int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
+    int totalTicks = idleTicks + activeTicks; 
 
     int pagedIn = memoryManager->getPagedIn();     
     int pagedOut = memoryManager->getPagedOut();   
@@ -541,9 +537,9 @@ void Shell::vmstat() {
     std::cout << totalMemory << " K total memory\n"
         << usedMemory << " K used memory\n"
         << freeMemory << " K free memory\n"
-        << idleTicks << " idle cpu ticks -- Needs to be implemented\n"
-        << activeTicks << " active cpu ticks -- Needs to be implemented\n"
-        << totalTicks << " total cpu ticks -- Needs to be implemented\n"
+        << idleTicks << " idle cpu ticks\n"
+        << activeTicks << " active cpu ticks\n"
+        << totalTicks << " total cpu ticks\n"
         << pagedIn << " num paged in\n"
         << pagedOut << " num paged out\n";
 }
