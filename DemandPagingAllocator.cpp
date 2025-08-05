@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <cstring> // For memset
 
 DemandPagingAllocator::DemandPagingAllocator(size_t memory, size_t pageSize)
     : memory(memory), pageSize(pageSize), mainMemory(new char[memory])
@@ -182,6 +183,9 @@ size_t DemandPagingAllocator::calculatePageOffset(int pid, size_t virtualPage)
     return (processPageBase[pid] + virtualPage) * pageSize;
 }
 
+
+//CHECK IF REMOVING THIS BREAKS ANYTHING
+/*
 void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
 {
     std::ifstream backingStore("csopesy-backing-store.txt", std::ios::binary);
@@ -189,6 +193,33 @@ void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
     backingStore.seekg(offset);
     backingStore.read(buffer, pageSize);
     backingStore.close();
+}
+*/
+
+void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer) {
+    size_t pageSizeBytes = pageSize * 1024;
+    size_t offset = calculatePageOffset(pid, virtualPage);
+
+    std::ifstream backingStore("csopesy-backing-store.txt", std::ios::binary);
+    if (!backingStore) {
+        memset(buffer, 0, pageSizeBytes);
+        return;
+    }
+
+    backingStore.seekg(0, std::ios::end);
+    size_t fileSize = backingStore.tellg();
+
+    if (offset >= fileSize) {
+        memset(buffer, 0, pageSizeBytes);
+        return;
+    }
+
+    backingStore.seekg(offset);
+    backingStore.read(buffer, pageSizeBytes);
+
+    if (static_cast<size_t>(backingStore.gcount()) < pageSizeBytes) {
+        memset(buffer + backingStore.gcount(), 0, pageSizeBytes - backingStore.gcount());
+    }
 }
 
 void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buffer)
@@ -227,3 +258,60 @@ size_t DemandPagingAllocator::getPageSize() const
 {
     return this->pageSize;
 }
+
+uint16_t DemandPagingAllocator::readUint16(int pid, size_t address) {
+    size_t pageSizeBytes = pageSize * 1024;
+    size_t pageIndex = address / pageSizeBytes;
+    size_t offset = address % pageSizeBytes;
+
+    // Check if access crosses page boundary
+    if (offset > pageSizeBytes - sizeof(uint16_t)) {
+        throw std::runtime_error("Cross-page access not allowed");
+    }
+
+    accessPage(pid, pageIndex);
+
+    auto& table = pageTables[pid];
+    if (pageIndex >= table.size()) {
+        throw std::runtime_error("Page index out of range");
+    }
+
+    PageTableEntry& entry = table[pageIndex];
+    if (!entry.present) {
+        throw std::runtime_error("Page not present");
+    }
+
+    char* physicalAddr = mainMemory + (entry.physicalFrame * pageSizeBytes) + offset;
+    uint16_t value = 0;
+    memcpy(&value, physicalAddr, sizeof(uint16_t));
+
+    return value;
+}
+
+void DemandPagingAllocator::writeUint16(int pid, size_t address, uint16_t value) {
+    size_t pageSizeBytes = pageSize * 1024;
+    size_t pageIndex = address / pageSizeBytes;
+    size_t offset = address % pageSizeBytes;
+
+    // Check if access crosses page boundary
+    if (offset > pageSizeBytes - sizeof(uint16_t)) {
+        throw std::runtime_error("Cross-page access not allowed");
+    }
+
+    accessPage(pid, pageIndex);
+
+    auto& table = pageTables[pid];
+    if (pageIndex >= table.size()) {
+        throw std::runtime_error("Page index out of range");
+    }
+
+    PageTableEntry& entry = table[pageIndex];
+    if (!entry.present) {
+        throw std::runtime_error("Page not present");
+    }
+
+    char* physicalAddr = mainMemory + (entry.physicalFrame * pageSizeBytes) + offset;
+    memcpy(physicalAddr, &value, sizeof(uint16_t));
+}
+
+// Update pageIn to initialize pages to zero

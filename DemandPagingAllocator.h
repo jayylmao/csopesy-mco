@@ -31,6 +31,9 @@ public:
 
 	size_t getPageSize() const;
 
+	uint16_t readUint16(int pid, size_t address);
+	void writeUint16(int pid, size_t address, uint16_t value);
+
 private:
 	// maps pid to vector of page tables.
 	std::unordered_map<int, std::vector<PageTableEntry>> pageTables;
