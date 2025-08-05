@@ -10,6 +10,7 @@
 #include "WriteCommand.h"
 #include "Process.h"
 
+#include <iostream>
 #include <ctime>
 #include <random>
 #include <iterator>
@@ -241,11 +242,7 @@ int Process::getMemory() const
 }
 
 void Process::setParsedInstructions(const std::vector<std::vector<std::string>>& instructions) {
-	// Clear any existing instructions
-	while (!instructionQueue.empty()) {
-		instructionQueue.pop();
-	}
-
+	
 	// Convert parsed instructions into ICommand objects
 	for (const auto& instrParts : instructions) {
 		if (instrParts.empty()) continue;
@@ -254,16 +251,80 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 
 		// --- Command Factory Logic ---
 		if (command == "DECLARE" && instrParts.size() == 3) {
-			instructionQueue.push(std::make_unique<DeclareCommand>(instrParts[1], std::stoi(instrParts[2])));
-		}
-		else if (command == "PRINT" && instrParts.size() >= 2) {
-			// Handle quoted strings (e.g., PRINT "Hello")
-			std::string message;
-			for (size_t i = 1; i < instrParts.size(); ++i) {
-				if (i > 1) message += " ";
-				message += instrParts[i];
+			std::string varName = instrParts[1];
+			uint16_t value;
+			try {
+				value = static_cast<uint16_t>(std::stoi(instrParts[2]));
 			}
-			instructionQueue.push(std::make_unique<PrintCommand>(message));
+			catch (...) {
+				throw std::runtime_error("Invalid DECLARE value: " + instrParts[2]);
+			}
+
+			// Save to symbol table immediately (like in createFlatCommand)
+			symbolTable[varName] = value;
+			instructionQueue.push(std::make_unique<DeclareCommand>(varName, value ));
+		}
+
+		else if (command == "PRINT") {
+			if (instrParts.size() >= 2) {
+				std::vector<std::string> elements;
+				std::string content = instrParts[1];
+
+				// Improved parsing logic
+				size_t start = 0;
+				bool inQuotes = false;
+				int bracketDepth = 0;
+
+				for (size_t i = 0; i <= content.size(); ++i) {
+					char c = (i < content.size()) ? content[i] : '\0';
+
+					// Handle quotes (considering escaped quotes)
+					if (c == '"' && (i == 0 || content[i - 1] != '\\')) {
+						inQuotes = !inQuotes;
+					}
+					// Handle parentheses (if needed for future extensions)
+					else if (!inQuotes) {
+						if (c == '(') bracketDepth++;
+						else if (c == ')') bracketDepth--;
+					}
+
+					// Split at + operator when not in quotes and outside brackets
+					if (!inQuotes && bracketDepth == 0) {
+						if (c == '+' || i == content.size()) {
+							// Extract element between start and current position
+							if (i > start) {
+								std::string element = content.substr(start, i - start);
+
+								// Trim whitespace only outside quotes
+								size_t first = element.find_first_not_of(" \t");
+								size_t last = element.find_last_not_of(" \t");
+
+								if (first != std::string::npos) {
+									element = element.substr(first, (last - first + 1));
+
+									// Validate variables
+									if (!element.empty()) {
+										if (element.front() != '"' &&
+											symbolTable.find(element) == symbolTable.end()) {
+											throw std::runtime_error("Undefined variable: " + element);
+										}
+										elements.push_back(element);
+									}
+								}
+							}
+							start = i + 1;  // Move start to next character
+						}
+					}
+				}
+
+				if (!elements.empty()) {
+					instructionQueue.push(std::make_unique<PrintCommand>(elements));
+					// Debug output
+					//std::cout << "PRINT command with elements: ";
+					for (const auto& e : elements) std::cout << e << " ";
+					std::cout << "\n";
+				}
+			}
 		}
 		else if (command == "ADD" && instrParts.size() == 4) {
 			instructionQueue.push(std::make_unique<AddCommand>(instrParts[1], instrParts[2], instrParts[3]));
