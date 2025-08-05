@@ -1,6 +1,7 @@
 #pragma once
 #include "IScheduler.h"
 #include "DemandPagingAllocator.h"
+#include "ProcessManager.h"
 #include <queue>
 #include <vector>
 #include <atomic>
@@ -16,7 +17,7 @@ class Process;
  */
 class FCFSScheduler : public IScheduler {
 public:
-    FCFSScheduler(int cores, std::shared_ptr<DemandPagingAllocator> memoryManager);
+    FCFSScheduler(int cores, std::shared_ptr<DemandPagingAllocator> memoryManager, std::shared_ptr<ProcessManager> processManager);
     ~FCFSScheduler();
 
     /**
@@ -46,6 +47,7 @@ private:
 
     std::atomic<bool> stop;
     std::shared_ptr<DemandPagingAllocator> memoryManager;
+    std::shared_ptr<ProcessManager> processManager;
 
     /**
      * @brief Worker thread loop for each CPU core.

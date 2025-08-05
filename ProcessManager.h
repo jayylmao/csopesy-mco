@@ -51,6 +51,12 @@ public:
 	 */
 	void createProcess(const std::string& name, int instructionCount, int mem, size_t pageSize);
 
+	/**
+	 * @brief Clean up finished process without removing it from the process table to keep track of finished processes.
+	 * @param name Name of process to clean up.
+	 */
+	void cleanupProcess(const std::string& name);
+
 private:
 	ProcessTable processTable;
 	std::mutex processMutex;

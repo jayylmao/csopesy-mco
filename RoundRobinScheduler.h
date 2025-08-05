@@ -1,6 +1,7 @@
 #pragma once
 #include "IScheduler.h"
 #include "DemandPagingAllocator.h"
+#include "ProcessManager.h"
 #include <vector>
 #include <deque>
 #include <mutex>
@@ -11,7 +12,7 @@ class ICommand;
 
 class RoundRobinScheduler : public IScheduler {
 public:
-    RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager);
+    RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager, std::shared_ptr<ProcessManager> processManager);
     void addProcess(std::shared_ptr<Process> process) override;
     void runScheduler() override;
     void stopScheduler() override;
@@ -32,7 +33,7 @@ private:
     std::vector<std::thread> threads;
 
     std::shared_ptr<DemandPagingAllocator> memoryManager;
-
+    std::shared_ptr<ProcessManager> processManager;
 
     void coreWorker(int coreId);
 

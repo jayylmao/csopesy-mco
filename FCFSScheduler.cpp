@@ -8,8 +8,8 @@
 #include <string> 
 #include <mutex>
 
-FCFSScheduler::FCFSScheduler(int cores, std::shared_ptr<DemandPagingAllocator> memoryManager)
-    : stop(false), numCores(cores), memoryManager(memoryManager)
+FCFSScheduler::FCFSScheduler(int cores, std::shared_ptr<DemandPagingAllocator> memoryManager, std::shared_ptr<ProcessManager> processManager)
+    : stop(false), numCores(cores), memoryManager(memoryManager), processManager(processManager)
 {
     // Ensure valid core count
     if (cores < 1 || cores > 128) cores = 4;
@@ -69,16 +69,12 @@ void FCFSScheduler::coreWorker(int coreId)
             }
         }
 
-        if (process) {
-            process->setCoreId(coreId);
-            int pid = process->getPID();
+        process->setCoreId(coreId);
 
-            for (int i = 0; i < process->getTotalLines(); ++i) {
-                process->executeInstruction();
-            }
+        while (!process->hasFinished()) {
+            process->executeInstruction();
         }
-        else {
-            memoryManager->deallocate(process->getPID());
-        }
+
+        processManager->cleanupProcess(process->getName());
     }
 }

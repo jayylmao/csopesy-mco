@@ -2,6 +2,7 @@
 #include "Process.h"
 #include "ICommand.h"
 #include "DemandPagingAllocator.h"
+#include "ProcessManager.h"
 
 #include <thread>
 #include <memory>
@@ -12,8 +13,8 @@
 #include <ctime>
 #include <algorithm>
 
-RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager)
-    : numCores(coreCount), timeQuantum(timeQuantum), snapshotInterval(snapshotInterval), memoryManager(memoryManager) {
+RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager, std::shared_ptr<ProcessManager> processManager)
+    : numCores(coreCount), timeQuantum(timeQuantum), snapshotInterval(snapshotInterval), memoryManager(memoryManager), processManager(processManager) {
 }
 
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
@@ -83,7 +84,7 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             cv.notify_one();
         }
         else {
-            memoryManager->deallocate(process->getPID());
+            processManager->cleanupProcess(process->getName());
         }
     }
 }

@@ -29,6 +29,22 @@ void ProcessManager::createProcess(const std::string& name, int instructionCount
 	processTable.insert({ name, std::move(proc) });
 }
 
+void ProcessManager::cleanupProcess(const std::string& name)
+{
+	std::lock_guard<std::mutex> lock(processMutex);
+	auto it = processTable.find(name);
+	if (it == processTable.end()) {
+		return;
+	}
+
+	auto& process = it->second;
+
+	if (process->hasFinished()) {
+		memoryManager->deallocate(process->getPID());
+		process->setCoreId(-1);
+	}
+}
+
 std::vector<Process*> ProcessManager::listProcesses()
 {
 	std::lock_guard<std::mutex> lock(processMutex);

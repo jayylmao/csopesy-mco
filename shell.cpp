@@ -211,7 +211,7 @@ void Shell::initialize() {
 
             if (schedulerType == "fcfs" || schedulerType == "FCFS") {
                 std::cout << "[i] Using FCFS scheduler with " << cores << " cores" << std::endl;
-                scheduler = std::make_unique<FCFSScheduler>(cores, memoryManager);
+                scheduler = std::make_unique<FCFSScheduler>(cores, memoryManager, processManager);
                 validScheduler = true;
             }
             else if (schedulerType == "rr" || schedulerType == "RR") {
@@ -245,7 +245,7 @@ void Shell::initialize() {
                         << " cores and default quantum (5)" << std::endl;
                 }
 
-                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, snapshotInterval, memoryManager);
+                scheduler = std::make_unique<RoundRobinScheduler>(cores, quantum, snapshotInterval, memoryManager, processManager);
                 validScheduler = true;
             }
         }
