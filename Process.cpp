@@ -338,3 +338,21 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 
 	totalInstructions = instructionQueue.size();
 }
+
+void Process::setMemoryAccessViolation(const std::string& time, const std::string& address) {
+	memoryAccessViolation = true;
+	violationTime = time;
+	violationAddress = address;
+}
+
+bool Process::hasMemoryAccessViolation() const {
+	return memoryAccessViolation;
+}
+
+std::string Process::getViolationTime() const {
+	return violationTime;
+}
+
+std::string Process::getViolationAddress() const {
+	return violationAddress;
+}

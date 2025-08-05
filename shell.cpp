@@ -306,12 +306,13 @@ void Shell::screen(std::vector<std::string> args)
         std::cout << "[*] The screen command needs an argument. -s to create a new process, -r to view a process, and -ls to list the running processes." << std::endl;
         return;
     } // switch to list screen command.
-    else if (args[0] == "-ls") { //SCREEN -LS
+    //SCREEN -LS
+    else if (args[0] == "-ls") { 
 screenList();
         return;
     } // too many arguments given to screen.
-
-    else if (args[0] == "-s") { //SCREEN - S
+    //SCREEN - S
+    else if (args[0] == "-s") { 
         if (args.size() < 3) {
             std::cout << "[*] You must provide a process name. Usage: screen -s <processname> <memorysize>" << std::endl;
             return;
@@ -338,24 +339,20 @@ screenList();
         screen->onEnabled();
         clear();
     }
-
-    else if (args[0] == "-r") { // SCREEN -R
+    // SCREEN -R
+    else if (args[0] == "-r") {
         if (args.size() < 2) {
             std::cout << "[*] You must provide a process name. Usage: screen -r <processname>" << std::endl;
             return;
         }
-        
-        //std::system("cls");
-        std::string processName = args[1];
 
+        std::string processName = args[1];
         std::vector<Process*> processes = processManager->listProcesses();
         Process* found = nullptr;
         int pid = -1, totalLines = 0;
 
-        for (auto* p : processes) 
-        {
-            if (p->getName() == processName) 
-            {
+        for (auto* p : processes) {
+            if (p->getName() == processName) {
                 found = p;
                 pid = p->getPID();
                 totalLines = p->getTotalLines();
@@ -363,21 +360,25 @@ screenList();
             }
         }
 
-        if (found) 
-        {
+        if (found) {
+            // Check if process terminated due to memory access violation
+            if (found->hasMemoryAccessViolation()) {
+                std::cout << "Process " << processName << " shut down due to memory access violation error that occurred at "
+                    << found->getViolationTime() << ". " << found->getViolationAddress() << " invalid" << std::endl;
+                return;
+            }
+
             std::system("cls");
             auto screenConsole = std::make_shared<ScreenS>(processName, pid, processManager.get(), memoryManager);
             screenConsole->onEnabled();
             clear();
         }
-        else
-        {
-            std::cout << "[*] You must provide a valid process name. " << std::endl;
-            return;
+        else {
+            std::cout << "[*] Process not found: " << processName << std::endl;
         }
         return;
     }
-
+    // SCREEN -C
     else if (args[0] == "-c") {
         // Validate argument count
         if (args.size() < 4) {
@@ -499,13 +500,14 @@ screenList();
         }
     }
 
-
+    // <SCREEN size>2 argument
     else if (args.size() > 2)
     {
         std::cout << "[*] Too many arguments given. -s to create a new process, -r to redraw the screen and create a new process, and -ls to list the running processes." << std::endl;
         return;
     }
-    else if (args[0] == "-s")
+    // Log fillers
+    else if (args[0] == "-s" || args[0] == "-c")
     {
         std::cout << "[*] Creating process..." << std::endl;
         return;
