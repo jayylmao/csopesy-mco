@@ -730,6 +730,11 @@ void Shell::printHeader()
         << "\033[0m"; // Reset color
 }
 
+void Shell::processSMI()
+{
+    std::cout << memoryManager->displayMemory() << std::endl;
+}
+
 void Shell::splitString(std::string const& string, char const delim, std::vector<std::string>& tokens)
 {
     // push an empty string and return to avoid going through the splitting process if input is empty.
@@ -803,6 +808,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "exit") {
         setQuit();
+    }
+    else if (input_tokens[0] == "process-smi") {
+        processSMI();
     }
     else if (input_tokens[0] == "help") {
         std::cout << "[*] Available commands:\n\n"
