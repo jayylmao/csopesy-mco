@@ -28,6 +28,8 @@ add_executable(main main.cpp
         "Marquee.cpp"
         "PrintCommand.cpp"
         "PrintCommand.h"
+        "PrintCommandC.cpp"
+        "PrintCommandC.h"
         "Process.h"
         "Process.cpp"
         "ProcessManager.h"
@@ -40,4 +42,4 @@ add_executable(main main.cpp
         "SleepCommand.h"
         "SubtractCommand.cpp"
         "SubtractCommand.h"
- "ForCommand.cpp" "ForCommand.h" "IMemoryAllocator.h" "FlatMemoryAllocator.cpp" "ReadCommand.cpp" "WriteCommand.cpp")
+ "ForCommand.cpp" "ForCommand.h" "IMemoryAllocator.h" "FlatMemoryAllocator.cpp" "ReadCommand.cpp" "WriteCommand.cpp" "PrintCommandC.cpp" "PrintCommandC.h")

@@ -487,9 +487,8 @@ screenList();
 
             if (scheduler) {
                 scheduler->addProcess(proc);
-                std::cout << "[+] Created process '" << processName
-                    << "' with " << parsedInstructions.size()
-                    << " instructions\n";
+                std::cout << "[+] Created process '" << processName;
+                   
             }
             else {
                 throw std::runtime_error("Scheduler not initialized");

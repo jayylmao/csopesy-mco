@@ -1,4 +1,5 @@
 #include "PrintCommand.h"
+#include "PrintCommandC.h"
 #include "DeclareCommand.h"
 #include "AddCommand.h"
 #include "ReadCommand.h"
@@ -100,7 +101,7 @@ void Process::createFlatCommand(int& remaining, int depth)
 			case ICommand::PRINT: {
 				--remaining;
 				std::string msg = "Hello world from " + this->name + "!";
-				instructionQueue.push(std::make_unique<PrintCommand>(msg, logs));
+				instructionQueue.push(std::make_unique<PrintCommand>(msg));
 				break;
 			}
 			case ICommand::DECLARE: {
@@ -329,7 +330,7 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 				}
 
 				if (!elements.empty()) {
-					instructionQueue.push(std::make_unique<PrintCommand>(elements, logs));
+					instructionQueue.push(std::make_unique<PrintCommandC>(elements, logs));
 				}
 			}
 		}
