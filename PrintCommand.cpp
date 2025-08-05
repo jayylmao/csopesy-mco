@@ -5,18 +5,18 @@
 #include <iomanip>
 #include <iostream>
 
-PrintCommand::PrintCommand(const std::string& msg)
-    : ICommand(Type::PRINT), printElements({ msg }) {
-}
-PrintCommand::PrintCommand(const std::vector<std::string>& elements)
-    : ICommand(Type::PRINT), printElements(elements) {}
+PrintCommand::PrintCommand(const std::string& msg, std::vector<std::string>& logs)
+    : ICommand(Type::PRINT), printElements({ msg }), logsToEdit(logs) {}
+
+PrintCommand::PrintCommand(const std::vector<std::string>& elements, std::vector<std::string>& logs)
+    : ICommand(Type::PRINT), printElements(elements), logsToEdit(logs) {}
 
 void PrintCommand::execute(Process& process) {
     std::string output;  
 
-    //std::cout << "Executing with elements: ";
-    for (const auto& e : printElements) std::cout << "'" << e << "' ";
-    std::cout << "\n";
+    for (const auto& e : printElements) {
+        logsToEdit.push_back(e);
+    }
 
     for (const auto& element : printElements) {
         if (element.empty()) continue;

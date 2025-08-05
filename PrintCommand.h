@@ -6,9 +6,9 @@
 class PrintCommand : public ICommand {
 public:
    
-    explicit PrintCommand(const std::vector<std::string>& elements);
+    explicit PrintCommand(const std::vector<std::string>& elements, std::vector<std::string>& logs);
 
-    explicit PrintCommand(const std::string& msg);
+    explicit PrintCommand(const std::string& msg, std::vector<std::string>& logs);
     
 
     void execute(Process& process) override;
@@ -16,7 +16,7 @@ public:
 
 private:
     std::vector<std::string> printElements;
+    std::vector<std::string>& logsToEdit;
     std::string msg;
     std::string var;
-    uint16_t val;
 };

@@ -51,8 +51,6 @@ public:
 	 */
 	void createProcess(const std::string& name, int instructionCount, int mem, size_t pageSize);
 
-	void createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize);
-
 private:
 	ProcessTable processTable;
 	std::mutex processMutex;

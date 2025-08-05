@@ -19,7 +19,7 @@ RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int sna
 void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        readyQueue.push_front(process);
+        readyQueue.push_back(process);
     }
     cv.notify_one();
 }
@@ -35,8 +35,7 @@ void RoundRobinScheduler::stopScheduler() {
         std::lock_guard<std::mutex> lock(queueMutex);
         stop = true;
        
-    } 
-    quantumStop = true;
+    }
         
     cv.notify_all();
 

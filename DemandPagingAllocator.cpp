@@ -3,11 +3,20 @@
 #include <fstream>
 
 DemandPagingAllocator::DemandPagingAllocator(size_t memory, size_t pageSize)
-    : memory(memory), pageSize(pageSize)
+    : memory(memory), pageSize(pageSize), mainMemory(new char[memory])
 {
     frameCount = memory / pageSize; // calculate number of frames.
     frameAllocationMap.resize(frameCount, false); // initialize all frames as unallocated.
     frameTable.resize(frameCount, { -1, static_cast<size_t>(-1) });
+
+    std::ofstream backingStore("csopesy-backing-store.txt", std::ios::out | std::ios::binary | std::ios::trunc);
+    if (backingStore) {
+        std::cout << "Backing store 'csopesy-backing-store.txt' created/cleared." << std::endl;
+        backingStore.close();
+    }
+    else {
+        std::cerr << "Error: Could not create backing store file." << std::endl;
+    }
 }
 
 DemandPagingAllocator::~DemandPagingAllocator()
@@ -16,6 +25,7 @@ DemandPagingAllocator::~DemandPagingAllocator()
     frameAllocationMap.clear();
     processPageBase.clear();
     frameTable.clear();
+    delete[] mainMemory;
 }
 
 void* DemandPagingAllocator::allocate(size_t size, int pid)
@@ -66,18 +76,25 @@ void DemandPagingAllocator::pageFaultHandler(int pid, size_t virtualPage)
 
     // evict frames when none are found.
     if (frame == static_cast<size_t>(-1)) {
+        if (frameQueue.empty()) {
+            return;
+        }
         size_t victimFrame = frameQueue.front();
         frameQueue.pop();
 
         auto [victimPid, victimPage] = frameTable[victimFrame];
         auto& victimTable = pageTables[victimPid];
 
-        if (victimTable[victimPage].present) {
-            char* buffer = new char[pageSize];
-            pageOut(victimPid, victimPage, buffer);
-            delete[] buffer;
-        }
+        char* buffer = new char[pageSize];
 
+        // copy buffer from frame to buffer
+        memcpy(buffer, mainMemory + (victimFrame * pageSize), pageSize);
+
+        // write buffer to backing store
+        pageOut(victimPid, victimPage, buffer);
+        delete[] buffer;
+
+        // update victim page table entry
         victimTable[victimPage].present = false;
         victimTable[victimPage].physicalFrame = static_cast<size_t>(-1);
 
@@ -85,6 +102,8 @@ void DemandPagingAllocator::pageFaultHandler(int pid, size_t virtualPage)
     }
 
     char* buffer = new char[pageSize];
+
+    // read page from backing store into buffer
     pageIn(pid, virtualPage, buffer);
 
     auto& table = pageTables[pid];
@@ -94,9 +113,12 @@ void DemandPagingAllocator::pageFaultHandler(int pid, size_t virtualPage)
         return;
     }
 
+    // update new page table entry
     table[virtualPage].physicalFrame = frame;
     table[virtualPage].present = true;
-    table[virtualPage].dirty = false;
+
+    // copy data from buffer into physical mem frame.
+    memcpy(mainMemory + (frame * pageSize), buffer, pageSize);
 
     frameAllocationMap[frame] = true;
     frameQueue.push(frame);
@@ -131,6 +153,11 @@ void DemandPagingAllocator::pageIn(int pid, size_t virtualPage, char* buffer)
 void DemandPagingAllocator::pageOut(int pid, size_t virtualPage, const char* buffer)
 {
     std::fstream backingStore("csopesy-backing-store.txt", std::ios::in | std::ios::out | std::ios::binary);
+
+    if (!backingStore) {
+        std::cerr << "[!] Could not open backing store." << std::endl;
+    }
+
     size_t offset = calculatePageOffset(pid, virtualPage);
     backingStore.seekp(offset);
     backingStore.write(buffer, pageSize);

@@ -28,6 +28,7 @@ public:
 	void deallocate(int pid) override;
 	std::string displayMemory() override;
 	void accessPage(int pid, size_t virtualPage);
+	void writeToPage(int pid, size_t virtualPage);
 
 	size_t getPageSize() const;
 
@@ -58,6 +59,9 @@ private:
 
 	// number of frames that the system has.
 	size_t frameCount;
+
+	// physical memory.
+	char* mainMemory;
 
 	/**
 	 * @brief Find a free frame when loading a page into memory.
