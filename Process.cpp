@@ -236,11 +236,7 @@ int Process::getMemory() const
 }
 
 void Process::setParsedInstructions(const std::vector<std::vector<std::string>>& instructions) {
-	// Clear any existing instructions
-	while (!instructionQueue.empty()) {
-		instructionQueue.pop();
-	}
-
+	
 	// Convert parsed instructions into ICommand objects
 	for (const auto& instrParts : instructions) {
 		if (instrParts.empty()) continue;
@@ -260,7 +256,7 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 
 			// Save to symbol table immediately (like in createFlatCommand)
 			symbolTable[varName] = value;
-			instructionQueue.push(std::make_unique<DeclareCommand>(instrParts[1], std::stoi(instrParts[2])));
+			instructionQueue.push(std::make_unique<DeclareCommand>(varName, value ));
 		}
 
 		else if (command == "PRINT") {
@@ -318,7 +314,7 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 				if (!elements.empty()) {
 					instructionQueue.push(std::make_unique<PrintCommand>(elements));
 					// Debug output
-					std::cout << "PRINT command with elements: ";
+					//std::cout << "PRINT command with elements: ";
 					for (const auto& e : elements) std::cout << e << " ";
 					std::cout << "\n";
 				}
