@@ -1,6 +1,8 @@
 #include "DemandPagingAllocator.h"
 #include <iostream>
+#include <sstream>
 #include <fstream>
+#include <iomanip>
 
 DemandPagingAllocator::DemandPagingAllocator(size_t memory, size_t pageSize)
     : memory(memory), pageSize(pageSize), mainMemory(new char[memory])
@@ -91,7 +93,25 @@ void DemandPagingAllocator::deallocate(int pid)
 std::string DemandPagingAllocator::displayMemory()
 {
     std::lock_guard<std::mutex> lock(allocatorMutex);
-    return "TODO: implement memory display";
+
+    std::stringstream ss;
+    size_t usedFrames = std::count(frameAllocationMap.begin(), frameAllocationMap.end(), true);
+
+    size_t usedMemoryBytes = usedFrames * pageSize;
+    size_t totalMemoryBytes = this->memory;
+
+    double usedMemoryKB = static_cast<double>(usedMemoryBytes) / 1024.0;
+    double totalMemoryKB = static_cast<double>(totalMemoryBytes) / 1024.0;
+
+    double utilizationPercent = (totalMemoryKB > 0) ? (usedMemoryKB / totalMemoryKB) * 100.0 : 0.0;
+
+    ss << "--- Physical Memory State ---\n";
+    ss << "Usage: " << std::fixed << std::setprecision(1) << usedMemoryKB << " KB / "
+        << totalMemoryKB << " KB (" << static_cast<int>(utilizationPercent) << "%)\n";
+    ss << "Frames Used: " << usedFrames << " / " << frameCount << "\n";
+    ss << "-----------------------------\n";
+
+    return ss.str();
 }
 
 void DemandPagingAllocator::pageFaultHandler(int pid, size_t virtualPage)
