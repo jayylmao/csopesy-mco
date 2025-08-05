@@ -97,17 +97,14 @@ std::string DemandPagingAllocator::displayMemory()
     std::stringstream ss;
     size_t usedFrames = std::count(frameAllocationMap.begin(), frameAllocationMap.end(), true);
 
-    size_t usedMemoryBytes = usedFrames * pageSize;
-    size_t totalMemoryBytes = this->memory;
+    size_t usedMemory = usedFrames * pageSize;
+    size_t totalMemory = this->memory;
 
-    double usedMemoryKB = static_cast<double>(usedMemoryBytes) / 1024.0;
-    double totalMemoryKB = static_cast<double>(totalMemoryBytes) / 1024.0;
-
-    double utilizationPercent = (totalMemoryKB > 0) ? (usedMemoryKB / totalMemoryKB) * 100.0 : 0.0;
+    double utilizationPercent = (totalMemory > 0) ? (usedMemory / totalMemory) * 100.0 : 0.0;
 
     ss << "--- Physical Memory State ---\n";
-    ss << "Usage: " << std::fixed << std::setprecision(1) << usedMemoryKB << " KB / "
-        << totalMemoryKB << " KB (" << static_cast<int>(utilizationPercent) << "%)\n";
+    ss << "Usage: " << usedMemory << " KB / "
+        << totalMemory << " KB (" << static_cast<int>(utilizationPercent) << "%)\n";
     ss << "Frames Used: " << usedFrames << " / " << frameCount << "\n";
     ss << "-----------------------------\n";
 
