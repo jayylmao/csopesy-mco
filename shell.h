@@ -133,6 +133,7 @@ public:
      */
     int getCores();
 
+    void vmstat();
     void processSMI();
 
 private:

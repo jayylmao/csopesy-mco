@@ -1,4 +1,5 @@
 #include "PrintCommand.h"
+#include "PrintCommandC.h"
 #include "DeclareCommand.h"
 #include "AddCommand.h"
 #include "ReadCommand.h"
@@ -62,6 +63,17 @@ Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<I
 	oss << std::put_time(time_info, "%m/%d/%Y, %I:%M:%S %p");
 	creationTimestamp = oss.str();
 
+	symbolTable["var1"] = 0;
+	symbolTable["var2"] = 0;
+	symbolTable["var3"] = 0;
+	symbolTable["var4"] = 0;
+	symbolTable["var5"] = 0;
+	symbolTable["var6"] = 0;
+	symbolTable["var7"] = 0;
+	symbolTable["var8"] = 0;
+	symbolTable["var9"] = 0;
+	symbolTable["var10"] = 0;
+
 	for (auto& instruction : instructions) {
 		instructionQueue.push(std::move(instruction));
 	}
@@ -89,7 +101,7 @@ void Process::createFlatCommand(int& remaining, int depth)
 			case ICommand::PRINT: {
 				--remaining;
 				std::string msg = "Hello world from " + this->name + "!";
-				instructionQueue.push(std::make_unique<PrintCommand>(msg, logs));
+				instructionQueue.push(std::make_unique<PrintCommand>(msg));
 				break;
 			}
 			case ICommand::DECLARE: {
@@ -318,7 +330,7 @@ void Process::setParsedInstructions(const std::vector<std::vector<std::string>>&
 				}
 
 				if (!elements.empty()) {
-					instructionQueue.push(std::make_unique<PrintCommand>(elements, logs));
+					instructionQueue.push(std::make_unique<PrintCommandC>(elements, logs));
 				}
 			}
 		}

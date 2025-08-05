@@ -12,6 +12,8 @@ public:
     virtual void addProcess(std::shared_ptr<Process> process) = 0;
     virtual void runScheduler() = 0;
     virtual void stopScheduler() = 0;
+    virtual int getIdleTicks() const = 0;
+    virtual int getActiveTicks() const = 0;
 };
 
 #endif // ISCHEDULER_H

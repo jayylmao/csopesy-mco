@@ -53,14 +53,26 @@ std::string RoundRobinScheduler::getCurrentTimestamp() {
     return std::string(buffer);
 }
 
+int RoundRobinScheduler::getIdleTicks() const {
+    return idleTicks.load();
+}
+
+int RoundRobinScheduler::getActiveTicks() const {
+    return activeTicks.load();
+}
+
 void RoundRobinScheduler::coreWorker(int coreId) {    
     while (true) {
         std::shared_ptr<Process> process;
 
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            cv.wait(lock, [this]() { return stop || !readyQueue.empty(); });
-
+            //cv.wait(lock, [this]() { return stop || !readyQueue.empty(); });
+            if (!cv.wait_for(lock, std::chrono::milliseconds(1), [this]() { return stop || !readyQueue.empty(); })) {
+                // Timed out -> idle tick
+                idleTicks++;
+                continue;
+            }
             if (stop && readyQueue.empty()) break;
             process = readyQueue.front();
             readyQueue.pop_front();
@@ -74,6 +86,7 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         while (!process->hasFinished() && slice < timeQuantum) {
             process->executeInstruction();
             ++slice;
+            activeTicks++;
         }
         
         if (!process->hasFinished()) {
