@@ -12,6 +12,8 @@ add_executable(main main.cpp
         "AddCommand.cpp"
         "ConfigManager.h"
         "ConfigManager.cpp"
+        "DemandPagingAllocator.h"
+        "DemandPagingAllocator.cpp"
         "ReadCommand.h"
         "WriteCommand.h"
          

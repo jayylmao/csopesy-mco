@@ -5,7 +5,7 @@
 #include "RoundRobinScheduler.h"
 #include "IScheduler.h"
 #include "Process.h"
-#include "FlatMemoryAllocator.h"
+#include "DemandPagingAllocator.h"
 
 #include <chrono>
 #include <iostream>
@@ -13,7 +13,7 @@
 #include <random>
 #include <memory>
 
-Shell::Shell(int delayPerCycleMs):
+Shell::Shell(int delayPerCycleMs) :
     delayPerCycleMs(delayPerCycleMs),
     init(false),
     quit(false),
@@ -84,7 +84,6 @@ void Shell::initialize() {
         std::cout << "[!] Config unable to be read. Check if file exists or is in out>build>x64-debug" << std::endl;
     }
 
-    
     const auto& config = configManager.getConfig();
     // Sets minIns and Max Ins
 	if (config.find("min-ins") != config.end()) 
@@ -161,6 +160,9 @@ void Shell::initialize() {
         }
     }
 
+    memoryManager = std::make_shared<DemandPagingAllocator>(maxMem, memPerFrame);
+    processManager = std::make_shared<ProcessManager>(memoryManager);
+
     minMemPerProc = 64;
     if (config.find("min-mem-per-proc") != config.end()) {
         try {
@@ -175,7 +177,7 @@ void Shell::initialize() {
             std::cerr << "[!] Invalid min-mem-per-proc value (" << minMemPerProc << "). Using default (64)." << std::endl;
         }
 
-        processManager.setMinMemPerProc(minMemPerProc);
+        processManager->setMinMemPerProc(minMemPerProc);
     }
     
     maxMemPerProc = 65536;
@@ -192,7 +194,7 @@ void Shell::initialize() {
             std::cerr << "[!] Invalid min-mem-per-proc value (" << maxMemPerProc << "). Using default (65536)." << std::endl;
         }
 
-        processManager.setMaxMemPerProc(maxMemPerProc);
+        processManager->setMaxMemPerProc(maxMemPerProc);
     }
 
     if (!init) {
@@ -202,8 +204,6 @@ void Shell::initialize() {
         bool validScheduler = false;
         
         std::cout << "allocate " << maxMem << std::endl;
-        // TODO: replace with configurable one if needed.
-        memoryManager = std::make_shared<FlatMemoryAllocator>(maxMem);
 
         // Check if scheduler type is specified in config
         if (config.find("scheduler") != config.end()) {
@@ -320,10 +320,9 @@ screenList();
         std::string processName = args[1];
         int memory = stoi(args[2]);
 
-        //simulated total lines
-        processManager.createProcess(processName, randomNumber(), memory);
+        processManager->createProcess(processName, randomNumber(), memory, memPerFrame);
 
-        std::shared_ptr<Process> ptr = processManager.getSharedProcess(processName);
+        std::shared_ptr<Process> ptr = processManager->getSharedProcess(processName);
 
         // Use the scheduler interface instead of concrete class
         if (scheduler) {
@@ -334,8 +333,8 @@ screenList();
             return;
         }
 
-        int pid = processManager.getNextPID() - 1;
-        auto screen = std::make_shared<ScreenS>(processName, pid, &processManager, memoryManager);
+        int pid = processManager->getNextPID() - 1;
+        auto screen = std::make_shared<ScreenS>(processName, pid, processManager.get(), memoryManager);
         screen->onEnabled();
         clear();
     }
@@ -349,7 +348,7 @@ screenList();
         //std::system("cls");
         std::string processName = args[1];
 
-        std::vector<Process*> processes = processManager.listProcesses();
+        std::vector<Process*> processes = processManager->listProcesses();
         Process* found = nullptr;
         int pid = -1, totalLines = 0;
 
@@ -367,7 +366,7 @@ screenList();
         if (found) 
         {
             std::system("cls");
-            auto screenConsole = std::make_shared<ScreenS>(processName, pid, &processManager, memoryManager);
+            auto screenConsole = std::make_shared<ScreenS>(processName, pid, processManager.get(), memoryManager);
             screenConsole->onEnabled();
             clear();
         }
@@ -476,8 +475,8 @@ screenList();
 
         // --- Process Creation ---
         try {
-            processManager.createProcess(processName, parsedInstructions.size(), memorySize);
-            auto proc = processManager.getSharedProcess(processName);
+            processManager->createProcess(processName, parsedInstructions.size(), memorySize, memPerFrame);
+            auto proc = processManager->getSharedProcess(processName);
             proc->setParsedInstructions(parsedInstructions);  // Store for execution
 
             if (scheduler) {
@@ -524,7 +523,7 @@ void Shell::screenList()
 
 void Shell::outputProcessList(std::ostream& out)
 {
-    std::vector<Process*> processes = processManager.listProcesses();
+    std::vector<Process*> processes = processManager->listProcesses();
 
     int totalCores = cores;
     int usedCores = 0;
@@ -623,8 +622,8 @@ void Shell::schedulerStart()
             std::string name = "batch_" + std::to_string(counter++);
             int totalLines = randomNumber(); //random per process
 
-            processManager.createProcess(name, totalLines, minMemPerProc); // NOTE: hardcoded to use the minimum memory per process.
-            std::shared_ptr<Process> proc = processManager.getSharedProcess(name);
+            processManager->createProcess(name, totalLines, minMemPerProc, memPerFrame); // NOTE: hardcoded to use the minimum memory per process.
+            std::shared_ptr<Process> proc = processManager->getSharedProcess(name);
 
             if (scheduler) {
                 scheduler->addProcess(proc);

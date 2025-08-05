@@ -1,5 +1,6 @@
 #pragma once
 #include "ICommand.h"
+#include "DemandPagingAllocator.h"
 
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@
 
 //forward declare 
 class PrintCommand;
+
 /**
  * @class Process
  * @brief Represents a process running on the operating system.
@@ -17,9 +19,9 @@ class PrintCommand;
 class Process {
 	friend class PrintCommand;
 public:
-	Process(const std::string& name, int pid, int instructionCount, int mem);
+	Process(const std::string& name, int pid, int instructionCount, int mem, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager);
 
-	Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions);
+	Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager);
 	
 	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
@@ -108,7 +110,16 @@ private:
 
 	int memory; // amount of memory the process used.
 
+	size_t numPages; // number of pages accessible to the memory.
+
 	std::unordered_map<std::string, uint16_t> symbolTable; // maps variable names to their value
 
 	mutable std::mutex mtx; // protects coreId and finished
+
+	std::shared_ptr<DemandPagingAllocator> memoryManager;
+
+	/**
+	 * @brief Helper method to access page in memory.
+	 */
+	void accessCurrentPage();
 };

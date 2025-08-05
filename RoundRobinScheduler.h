@@ -1,6 +1,6 @@
 #pragma once
 #include "IScheduler.h"
-#include "IMemoryAllocator.h"
+#include "DemandPagingAllocator.h"
 #include <vector>
 #include <deque>
 #include <mutex>
@@ -11,7 +11,7 @@ class ICommand;
 
 class RoundRobinScheduler : public IScheduler {
 public:
-    RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<IMemoryAllocator> memoryManager);
+    RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager);
     void addProcess(std::shared_ptr<Process> process) override;
     void runScheduler() override;
     void stopScheduler() override;
@@ -31,7 +31,7 @@ private:
     std::condition_variable cv;
     std::vector<std::thread> threads;
 
-    std::shared_ptr<IMemoryAllocator> memoryManager;
+    std::shared_ptr<DemandPagingAllocator> memoryManager;
 
 
     void coreWorker(int coreId);
@@ -39,7 +39,5 @@ private:
     std::string getCurrentTimestamp();
 
     std::atomic<int> globalQuantumCounter{ 0 };
-    std::thread quantumThread;
     std::atomic<bool> quantumStop{ false };
-    void quantumTracker();
 };

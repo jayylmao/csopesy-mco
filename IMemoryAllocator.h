@@ -9,8 +9,8 @@ public:
 	virtual void deallocate(int pid) = 0;
 	virtual std::string displayMemory() = 0;
 
-	virtual size_t getExternalFragmentation() = 0;
-	virtual int getProcessCount() = 0;
+	//virtual size_t getExternalFragmentation() = 0;
+	//virtual int getProcessCount() = 0;
 
 	virtual ~IMemoryAllocator() = default;
 };

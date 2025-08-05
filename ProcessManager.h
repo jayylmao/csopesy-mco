@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <stdexcept>
+#include "DemandPagingAllocator.h"
 
 class ICommand;
 class Process;
@@ -13,6 +14,8 @@ class Process;
  */
 class ProcessManager {
 public:
+	ProcessManager(std::shared_ptr<DemandPagingAllocator> memoryManager);
+
 	// create type definition for table that tracks processes.
 	typedef std::map<std::string, std::shared_ptr<Process>> ProcessTable;
 
@@ -46,9 +49,9 @@ public:
 	 * @param pid Unique ID of process.
 	 * @param instructionCount Number of instructions that process has.
 	 */
-	void createProcess(const std::string& name, int instructionCount, int mem);
+	void createProcess(const std::string& name, int instructionCount, int mem, size_t pageSize);
 
-	void createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions);
+	void createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize);
 
 private:
 	ProcessTable processTable;
@@ -56,4 +59,6 @@ private:
 	static int nextPID;
 	int minMemPerProc;
 	int maxMemPerProc;
+
+	std::shared_ptr<DemandPagingAllocator> memoryManager;
 };

@@ -6,9 +6,9 @@
 #include <thread>
 
 #include "ProcessManager.h"
+#include "DemandPagingAllocator.h"
 #include "ConfigManager.h"
 
-class IMemoryAllocator;
 class IScheduler;
 
 /**
@@ -157,8 +157,8 @@ private:
     int minMemPerProc;
     int maxMemPerProc;
 
-    ProcessManager processManager;
+    std::shared_ptr<ProcessManager> processManager;
     ConfigManager configManager;
-    std::shared_ptr<IMemoryAllocator> memoryManager;
+    std::shared_ptr<DemandPagingAllocator> memoryManager;
     std::unique_ptr<IScheduler> scheduler;
 };

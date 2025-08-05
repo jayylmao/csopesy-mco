@@ -8,7 +8,7 @@
 #include <string> 
 #include <mutex>
 
-FCFSScheduler::FCFSScheduler(int cores, std::shared_ptr<IMemoryAllocator> memoryManager)
+FCFSScheduler::FCFSScheduler(int cores, std::shared_ptr<DemandPagingAllocator> memoryManager)
     : stop(false), numCores(cores), memoryManager(memoryManager)
 {
     // Ensure valid core count

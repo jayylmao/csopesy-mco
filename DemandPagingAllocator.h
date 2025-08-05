@@ -1,14 +1,19 @@
 #pragma once
+#include "IMemoryAllocator.h"
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <queue>
 
+// used for internal management.
 struct PageTableEntry {
 	size_t virtualPage;
 	size_t physicalFrame;
 	bool present;
 	bool dirty; // track if page has been used.
 };
+
+// used for external visualization.
 
 /**
  * @class DemandPagingAllocator
@@ -17,8 +22,14 @@ struct PageTableEntry {
 class DemandPagingAllocator : public IMemoryAllocator {
 public:
 	DemandPagingAllocator(size_t memory, size_t pageSize);
+	~DemandPagingAllocator();
+
 	void* allocate(size_t size, int pid) override;
 	void deallocate(int pid) override;
+	std::string displayMemory() override;
+	void accessPage(int pid, size_t virtualPage);
+
+	size_t getPageSize() const;
 
 private:
 	// maps pid to vector of page tables.
@@ -27,8 +38,14 @@ private:
 	// true if frame is allocated, false otherwise.
 	std::vector<bool> frameAllocationMap;
 
-	// track the start of a process's page array.
+	// tracks the start of a process's page array.
 	std::unordered_map<int, size_t> processPageBase;
+
+	// tracks order of frame allocation by index.
+	std::queue<size_t> frameQueue;
+
+	// maps frame index to (pid, virtual page).
+	std::vector<std::pair<int, size_t>> frameTable;
 
 	// track the next free page base.
 	size_t nextFreePageBase = 0;
@@ -59,4 +76,9 @@ private:
 	 * @brief Write a page to the backing store.
 	 */
 	void pageOut(int pid, size_t virtualPage, const char* buffer);
+
+	/**
+	 * @brief Evict frames when none are available.
+	 */
+	void pageFaultHandler(int pid, size_t virtualPage);
 };

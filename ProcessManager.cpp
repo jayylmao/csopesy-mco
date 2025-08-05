@@ -1,7 +1,12 @@
 #include "ProcessManager.h"
 #include "Process.h"
+#include "DemandPagingAllocator.h"
 
 int ProcessManager::nextPID = 1;
+
+ProcessManager::ProcessManager(std::shared_ptr<DemandPagingAllocator> memoryManager)
+	: memoryManager(memoryManager)
+{}
 
 std::shared_ptr<Process> ProcessManager::getSharedProcess(std::string name)
 {
@@ -15,19 +20,20 @@ std::shared_ptr<Process> ProcessManager::getSharedProcess(std::string name)
 	return it->second;
 }
 
-void ProcessManager::createProcess(const std::string& name, int instructionCount, int mem)
+void ProcessManager::createProcess(const std::string& name, int instructionCount, int mem, size_t pageSize)
 {
 	std::lock_guard<std::mutex> lock(processMutex);
 	int pid = nextPID++;
-	auto proc = std::make_shared<Process>(name, pid, instructionCount, mem);
+	memoryManager->allocate(memoryManager->getPageSize(), pid);
+	auto proc = std::make_shared<Process>(name, pid, instructionCount, mem, pageSize, memoryManager);
 	processTable.insert({ name, std::move(proc) });
 }
 
-void ProcessManager::createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions)
+void ProcessManager::createProcess(const std::string& name, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize)
 {
 	std::lock_guard<std::mutex> lock(processMutex);
 	int pid = nextPID++;
-	auto proc = std::make_shared<Process>(name, pid, std::move(instructions));
+	auto proc = std::make_shared<Process>(name, pid, std::move(instructions), pageSize, memoryManager);
 	processTable.insert({ name, std::move(proc) });
 }
 

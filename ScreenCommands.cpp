@@ -1,7 +1,7 @@
 #include "Process.h"
 #include "ScreenCommands.h"
 #include "ProcessManager.h"
-#include "IMemoryAllocator.h"
+#include "DemandPagingAllocator.h"
 #include <iostream>
 #include <iomanip>
 #include <ctime>
@@ -12,7 +12,7 @@
 
 std::mutex screenMutex;
 
-ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm, std::shared_ptr<IMemoryAllocator> mm)
+ScreenS::ScreenS(const std::string& processName, int pid, ProcessManager* pm, std::shared_ptr<DemandPagingAllocator> mm)
     : processName(processName), processID(pid), processManager(pm), memoryManager(mm) {
     creationTimestamp = getCurrentTimestamp();
 }

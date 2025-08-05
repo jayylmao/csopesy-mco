@@ -46,8 +46,8 @@ public:
 	 * @brief Display a visual representation of the memory.
 	 */
 	std::string displayMemory() override;
-	size_t getExternalFragmentation() override;
-	int getProcessCount() override;
+	size_t getExternalFragmentation();
+	int getProcessCount();
 	std::vector<MemoryBlock> getBlocks() const;
 	size_t getMaxSize() const;
 

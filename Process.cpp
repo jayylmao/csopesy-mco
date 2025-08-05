@@ -17,8 +17,8 @@
 #include <sstream>
 #include <chrono>
 
-Process::Process(const std::string& name, int pid, int instructionCount, int mem)
-	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false), memory(mem)
+Process::Process(const std::string& name, int pid, int instructionCount, int mem, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager)
+	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false), memory(mem), memoryManager(memoryManager)
 {
 	// store creation timestamp.
 	auto now = std::chrono::system_clock::now();
@@ -49,8 +49,8 @@ Process::Process(const std::string& name, int pid, int instructionCount, int mem
  * @param pid Unique process ID.
  * @param instructions Pointer to vector of unique pointers of commands.
  */
-Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions)
-	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false), memory(64)
+Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager)
+	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false), memory(64), memoryManager(memoryManager)
 {
 	// store creation timestamp.
 	auto now = std::chrono::system_clock::now();
@@ -144,16 +144,22 @@ void Process::createFlatCommand(int& remaining, int depth)
 	}
 }
 
+void Process::accessCurrentPage() {
+	size_t numPages = (memory + memoryManager->getPageSize() - 1) / memoryManager->getPageSize();
+	size_t page = executedInstructions % numPages;
+	memoryManager->accessPage(pid, page);
+}
+
 void Process::executeInstruction()
 {
 	//std::lock_guard<std::mutex> lock(mtx);
 	if (!instructionQueue.empty()) {
+		accessCurrentPage();
 		auto cmd = std::move(instructionQueue.front());
 		instructionQueue.pop();
 
 		if (cmd) {
 			cmd->execute(*this);
-			//incrementExecutedInstructions();
 		}
 
 		if (instructionQueue.empty()) {

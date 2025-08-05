@@ -1,7 +1,7 @@
 #include "RoundRobinScheduler.h"
 #include "Process.h"
 #include "ICommand.h"
-#include "FlatMemoryAllocator.h"
+#include "DemandPagingAllocator.h"
 
 #include <thread>
 #include <memory>
@@ -12,7 +12,7 @@
 #include <ctime>
 #include <algorithm>
 
-RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<IMemoryAllocator> memoryManager)
+RoundRobinScheduler::RoundRobinScheduler(int coreCount, int timeQuantum, int snapshotInterval, std::shared_ptr<DemandPagingAllocator> memoryManager)
     : numCores(coreCount), timeQuantum(timeQuantum), snapshotInterval(snapshotInterval), memoryManager(memoryManager) {
 }
 
@@ -27,45 +27,6 @@ void RoundRobinScheduler::addProcess(std::shared_ptr<Process> process) {
 void RoundRobinScheduler::runScheduler() {
     for (int i = 0; i < numCores; ++i) {
         threads.emplace_back(&RoundRobinScheduler::coreWorker, this, i);
-    }
-    quantumThread = std::thread(&RoundRobinScheduler::quantumTracker, this);
-}
-
-void RoundRobinScheduler::quantumTracker() {
-
-    while (!quantumStop) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(4000)); // Adjustable delay between cycles
-        int current = ++globalQuantumCounter;
-
-        if (globalQuantumCounter % snapshotInterval == 0) {
-            std::lock_guard<std::mutex> lock(snapshotMutex);
-            std::ofstream file("memory_stamp_" + std::to_string(globalQuantumCounter) + ".txt");
-
-            file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
-            file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
-            file << "Total External fragmentation in KB: "
-                << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
-
-            auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
-            if (!flatMem) {
-                file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
-                return;
-            }
-
-            auto blocks = flatMem->getBlocks();
-            std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
-                return (a.start + a.size) > (b.start + b.size);
-                });
-
-            file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
-            for (const auto& block : blocks) {
-                file << block.start + block.size << "\n";
-                file << "P" << block.pid << "\n";
-                file << block.start << "\n\n";
-            }
-            file << "----start---- = 0\n";
-            file.close();
-        }
     }
 }
 
@@ -82,8 +43,6 @@ void RoundRobinScheduler::stopScheduler() {
     for (auto& t : threads) {
         if (t.joinable()) t.join();
     }
-    
-    if (quantumThread.joinable()) quantumThread.join();
 }
 
 std::string RoundRobinScheduler::getCurrentTimestamp() {
@@ -94,9 +53,7 @@ std::string RoundRobinScheduler::getCurrentTimestamp() {
     return std::string(buffer);
 }
 
-void RoundRobinScheduler::coreWorker(int coreId) {
-    void* memBlock;
-    
+void RoundRobinScheduler::coreWorker(int coreId) {    
     while (true) {
         std::shared_ptr<Process> process;
 
@@ -107,15 +64,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
             if (stop && readyQueue.empty()) break;
             process = readyQueue.front();
             readyQueue.pop_front();
-            memBlock = memoryManager->allocate(process->getMemory(), process->getPID());
-        }
-
-        if (!memBlock) {
-            process->logs.push_back("[*] Could not allocate memory for PID " + process->getPID());
-            std::lock_guard<std::mutex> lock(queueMutex);
-            readyQueue.push_back(process); // Put it back in the queue
-            cv.notify_one();
-            continue;
         }
 
         process->setCoreId(coreId);
@@ -137,40 +85,6 @@ void RoundRobinScheduler::coreWorker(int coreId) {
         }
         else {
             memoryManager->deallocate(process->getPID());
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(snapshotMutex);
-
-            if (coreId == 0) {
-                if (timeQuantum % snapshotInterval == 0) {
-                    std::ofstream file("memory_stamp_" + std::to_string(timeQuantum) + ".txt");
-                    file << "TimeStamp: (" << getCurrentTimestamp() << ")\n";
-                    file << "Number of processes in memory: " << memoryManager->getProcessCount() << "\n";
-                    file << "Total External fragmentation in KB: "
-                        << memoryManager->getExternalFragmentation() / 1024 << "\n\n";
-
-                    auto flatMem = std::dynamic_pointer_cast<FlatMemoryAllocator>(memoryManager);
-                    if (!flatMem) {
-                        file << "[Error: Memory manager is not FlatMemoryAllocator]\n";
-                        return;
-                    }
-
-                    auto blocks = flatMem->getBlocks();
-                    std::sort(blocks.begin(), blocks.end(), [](const MemoryBlock& a, const MemoryBlock& b) {
-                        return (a.start + a.size) > (b.start + b.size);
-                        });
-
-                    file << "----end---- = " << flatMem->getMaxSize() << "\n\n";
-                    for (const auto& block : blocks) {
-                        file << block.start + block.size << "\n";
-                        file << "P" << block.pid << "\n";
-                        file << block.start << "\n\n";
-                    }
-                    file << "----start---- = 0\n";
-                    file.close();
-                }
-            }
         }
     }
 }
