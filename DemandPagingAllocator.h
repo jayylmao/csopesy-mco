@@ -31,6 +31,9 @@ public:
 	void accessPage(int pid, size_t virtualPage);
 
 	size_t getPageSize() const;
+	int getUsedMemory() const;
+	int getPagedIn() const;
+	int getPagedOut() const;
 
 	uint16_t readUint16(int pid, size_t address);
 	void writeUint16(int pid, size_t address, uint16_t value);
@@ -67,6 +70,10 @@ private:
 	char* mainMemory;
 
 	std::mutex allocatorMutex;
+
+	size_t totalAllocatedMemory = 0;
+	size_t numPagedIn = 0;
+	size_t numPagedOut = 0;
 
 	/**
 	 * @brief Find a free frame when loading a page into memory.

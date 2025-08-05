@@ -308,7 +308,7 @@ void Shell::screen(std::vector<std::string> args)
     } // switch to list screen command.
     //SCREEN -LS
     else if (args[0] == "-ls") { 
-screenList();
+    screenList();
         return;
     } // too many arguments given to screen.
     //SCREEN - S
@@ -520,6 +520,32 @@ screenList();
         std::cout << "[*] " << args[0] << " is an invalid argument." << std::endl;
         return;
     }
+}
+
+void Shell::vmstat() {
+    int totalMemory = maxMem;                      // From config
+    int usedMemory = memoryManager->getUsedMemory(); // Implement this in DemandPagingAllocator
+    int freeMemory = totalMemory - usedMemory;
+
+    int idleTicks = 0;
+    int activeTicks = 0;
+    int totalTicks = 0;
+
+    //int idleTicks = scheduler ? scheduler->getIdleTicks() : 0; // Needs to be implemented
+    //int activeTicks = scheduler ? scheduler->getActiveTicks() : 0; // Needs to be implemented
+    //int totalTicks = idleTicks + activeTicks; // Needs to be implemented
+
+    int pagedIn = memoryManager->getPagedIn();     
+    int pagedOut = memoryManager->getPagedOut();   
+
+    std::cout << totalMemory << " K total memory\n"
+        << usedMemory << " K used memory\n"
+        << freeMemory << " K free memory\n"
+        << idleTicks << " idle cpu ticks -- Needs to be implemented\n"
+        << activeTicks << " active cpu ticks -- Needs to be implemented\n"
+        << totalTicks << " total cpu ticks -- Needs to be implemented\n"
+        << pagedIn << " num paged in\n"
+        << pagedOut << " num paged out\n";
 }
 
 void Shell::screenList()
@@ -796,6 +822,9 @@ void Shell::prompt()
     }
     else if (input_tokens[0] == "marquee") {
         marquee();
+    }
+    else if (input_tokens[0] == "vmstat") {
+        vmstat(); // Add this method in Shell
     }
     else if (input_tokens[0] == "clear") {
         clear();
