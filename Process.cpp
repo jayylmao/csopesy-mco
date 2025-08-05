@@ -62,6 +62,17 @@ Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<I
 	oss << std::put_time(time_info, "%m/%d/%Y, %I:%M:%S %p");
 	creationTimestamp = oss.str();
 
+	symbolTable["var1"] = 0;
+	symbolTable["var2"] = 0;
+	symbolTable["var3"] = 0;
+	symbolTable["var4"] = 0;
+	symbolTable["var5"] = 0;
+	symbolTable["var6"] = 0;
+	symbolTable["var7"] = 0;
+	symbolTable["var8"] = 0;
+	symbolTable["var9"] = 0;
+	symbolTable["var10"] = 0;
+
 	for (auto& instruction : instructions) {
 		instructionQueue.push(std::move(instruction));
 	}

@@ -14,17 +14,16 @@ PrintCommand::PrintCommand(const std::vector<std::string>& elements, std::vector
 void PrintCommand::execute(Process& process) {
     std::string output;  
 
-    for (const auto& e : printElements) {
-        logsToEdit.push_back(e);
-    }
+  //  for (const auto& e : printElements) {
+        //logsToEdit.push_back(e);
+   // }
 
     for (const auto& element : printElements) {
         if (element.empty()) continue;
 
-        //std::cout << "Processing element: '" << element << "'\n";
-
         // Handle quoted strings
         if (element.front() == '"' && element.back() == '"') {
+            // Extract content between quotes
             output += element.substr(1, element.size() - 2);
         }
         // Handle variables
