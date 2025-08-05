@@ -30,6 +30,9 @@ public:
 	void accessPage(int pid, size_t virtualPage);
 
 	size_t getPageSize() const;
+	int getUsedMemory() const;
+	int getPagedIn() const;
+	int getPagedOut() const;
 
 private:
 	// maps pid to vector of page tables.
@@ -63,6 +66,10 @@ private:
 	char* mainMemory;
 
 	std::mutex allocatorMutex;
+
+	size_t totalAllocatedMemory = 0;
+	size_t numPagedIn = 0;
+	size_t numPagedOut = 0;
 
 	/**
 	 * @brief Find a free frame when loading a page into memory.

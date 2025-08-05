@@ -133,7 +133,7 @@ public:
      */
     int getCores();
 
-    
+    void vmstat();
 
 private:
     bool init = false; // System starts uninitialized at first.
