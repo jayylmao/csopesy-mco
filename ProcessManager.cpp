@@ -29,6 +29,30 @@ void ProcessManager::createProcess(const std::string& name, int instructionCount
 	processTable.insert({ name, std::move(proc) });
 }
 
+void ProcessManager::createProcessC(
+	const std::string& name,
+	int instructionCount,
+	int mem,
+	size_t pageSize,
+	const std::vector<std::vector<std::string>>& parsedInstructions)
+{
+	std::lock_guard<std::mutex> lock(processMutex);
+	int pid = nextPID++;
+	memoryManager->allocate(mem, pid);
+	auto proc = std::make_shared<Process>(
+		name,
+		pid,
+		instructionCount,
+		mem,
+		pageSize,
+		memoryManager,
+		true);
+
+	proc->setParsedInstructions(parsedInstructions);
+
+	processTable.insert({ name, std::move(proc) });
+}
+
 void ProcessManager::cleanupProcess(const std::string& name)
 {
 	std::lock_guard<std::mutex> lock(processMutex);

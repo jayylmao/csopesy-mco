@@ -19,6 +19,7 @@
 #include <sstream>
 #include <chrono>
 
+/*
 Process::Process(const std::string& name, int pid, int instructionCount, int mem, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager)
 	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1), finished(false), memory(mem), memoryManager(memoryManager)
 {
@@ -44,18 +45,15 @@ Process::Process(const std::string& name, int pid, int instructionCount, int mem
 
 	createInstructions();
 }
-
-/**
- * @brief Alternate constructor for Process where commands are specified. Used for screen -c.
- * @param name Name of process.
- * @param pid Unique process ID.
- * @param instructions Pointer to vector of unique pointers of commands.
- */
-/*
-Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager)
-	: name(name), pid(pid), totalInstructions(instructions.size()), coreId(-1), finished(false), memory(64), memoryManager(memoryManager)
+*/
+Process::Process(const std::string& name, int pid, int instructionCount, int mem,
+	size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager,
+	bool isScreenC)
+	: name(name), pid(pid), totalInstructions(instructionCount), coreId(-1),
+	finished(false), memory(mem), memoryManager(memoryManager),
+	screenC(isScreenC)  // Initialize the flag
 {
-	// store creation timestamp.
+	// Store creation timestamp (same as original)
 	auto now = std::chrono::system_clock::now();
 	std::time_t raw_time = std::chrono::system_clock::to_time_t(now);
 	std::tm* time_info = std::localtime(&raw_time);
@@ -64,6 +62,7 @@ Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<I
 	oss << std::put_time(time_info, "%m/%d/%Y, %I:%M:%S %p");
 	creationTimestamp = oss.str();
 
+	// Initialize symbol table (same as original)
 	symbolTable["var1"] = 0;
 	symbolTable["var2"] = 0;
 	symbolTable["var3"] = 0;
@@ -75,11 +74,13 @@ Process::Process(const std::string& name, int pid, std::vector<std::unique_ptr<I
 	symbolTable["var9"] = 0;
 	symbolTable["var10"] = 0;
 
-	for (auto& instruction : instructions) {
-		instructionQueue.push(std::move(instruction));
+	if (!screenC) {
+		createInstructions();
 	}
+	
+	// Skip createInstructions() since we're using provided instructions
 }
-*/
+
 void Process::createInstructions()
 {
 	int remaining = totalInstructions;

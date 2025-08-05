@@ -51,6 +51,15 @@ public:
 	 */
 	void createProcess(const std::string& name, int instructionCount, int mem, size_t pageSize);
 
+
+	/**
+	 * @brief Create a process instance. FOR SCREEN -C
+	 * @param name Name of process.
+	 * @param pid Unique ID of process.
+	 * @param instructionCount Number of instructions that process has.
+	 */
+	void createProcessC(const std::string& name, int instructionCount, int mem, size_t pageSize, const std::vector<std::vector<std::string>>& parsedInstructions);
+
 	/**
 	 * @brief Clean up finished process without removing it from the process table to keep track of finished processes.
 	 * @param name Name of process to clean up.

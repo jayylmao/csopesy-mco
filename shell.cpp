@@ -481,9 +481,9 @@ void Shell::screen(std::vector<std::string> args)
 
         // Create process
         try {
-            processManager->createProcess(processName, parsedInstructions.size(), memorySize, memPerFrame);
+            processManager->createProcessC(processName, parsedInstructions.size(), memorySize, memPerFrame, parsedInstructions);
             auto proc = processManager->getSharedProcess(processName);
-            proc->setParsedInstructions(parsedInstructions);  // Store for execution
+           // proc->setParsedInstructions(parsedInstructions);  // Store for execution
 
             if (scheduler) {
                 scheduler->addProcess(proc);

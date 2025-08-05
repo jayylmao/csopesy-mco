@@ -19,9 +19,11 @@ class PrintCommand;
 class Process {
 	friend class PrintCommand;
 public:
-	Process(const std::string& name, int pid, int instructionCount, int mem, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager);
+	
 
-	Process(const std::string& name, int pid, std::vector<std::unique_ptr<ICommand>>&& instructions, size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager);
+	Process(const std::string& name, int pid, int instructionCount, int mem,
+		size_t pageSize, std::shared_ptr<DemandPagingAllocator> memoryManager,
+		bool isScreenC = false);
 	
 	std::queue<std::unique_ptr<ICommand>> instructionQueue;
 	std::vector<std::string> logs;
@@ -130,7 +132,7 @@ private:
 	bool memoryAccessViolation = false;
 	std::string violationTime;
 	std::string violationAddress;
-
+	bool screenC;
 	/**
 	 * @brief Helper method to access page in memory.
 	 */
